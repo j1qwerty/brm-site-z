@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Anyone can write a contact message; no public read.
+    match /contact_messages/{docId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    // Anyone can write an inquiry; no public read.
+    match /inquiries/{docId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    // Public can READ cms_content (live overrides only).
+    // Writes are restricted to authenticated admins.
+    // NOTE: Until you wire Firebase Auth, this allows writes from anyone
+    // who knows the sectionId. Tighten with `request.auth != null` once
+    // auth is set up.
+    match /cms_content/{docId} {
+      allow read: if true;
+      allow write: if true;  // TODO: tighten to `request.auth != null`
+    }
+
+    // Public can READ non-deleted cms_items.
+    // Admin writes are open until auth is configured.
+    match /cms_items/{docId} {
+      allow read: if true;
+      allow write: if true;  // TODO: tighten to `request.auth != null`
+    }
+
+    // Public can READ cms_settings.
+    match /cms_settings/{docId} {
+      allow read: if true;
+      allow write: if true;  // TODO: tighten to `request.auth != null`
+    }
+
+    // History is admin-only.
+    match /cms_history/{docId} {
+      allow read: if true;   // TODO: tighten to `request.auth != null`
+      allow write: if true;  // TODO: tighten to `request.auth != null`
+    }
+
+    // Deny everything else.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
