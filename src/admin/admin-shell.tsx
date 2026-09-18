@@ -18,8 +18,9 @@ import {
   SignOut,
 } from "@phosphor-icons/react/dist/ssr";
 import { useSite } from "@/components/site/site-context";
-import { AdminBadge } from "./admin-ui";
+import { AdminBadge, AdminLoading } from "./admin-ui";
 import { isFirebaseConfigured, signInWithGoogle, signOutAdmin } from "@/lib/firebase";
+import { useFirebaseUser, GOOGLE_REQUIRED_MSG } from "@/lib/use-firebase-user";
 import { useUnreadCounts } from "@/admin/use-unread-counts";
 import { AdminDashboard } from "@/admin/pages/dashboard";
 import { AdminInquiries } from "@/admin/pages/inquiries";
@@ -87,6 +88,10 @@ export function AdminShell() {
   });
   const [page, setPage] = useState<AdminPage>("dashboard");
   const firebaseReady = isFirebaseConfigured();
+  // Firebase restores the Google session asynchronously on refresh. Admin
+  // pages must not query Firestore until this resolves - otherwise every
+  // read/write fails with permission-denied (tightened rules need auth).
+  const { user: fbUser, loading: authLoading } = useFirebaseUser();
   const unread = useUnreadCounts(authed);
 
   // One-time cleanup of the legacy persistent flag from older builds.
@@ -116,6 +121,16 @@ export function AdminShell() {
 
   if (!authed) {
     return <AdminLogin onAuthed={handleAuthed} />;
+  }
+
+  // Auth still restoring after a refresh - hold the pages so their Firestore
+  // queries don't fire unauthenticated and fail.
+  if (firebaseReady && authLoading) {
+    return (
+      <div className="min-h-[calc(100dvh-4rem)] grid place-items-center">
+        <AdminLoading label="Restoring session..." />
+      </div>
+    );
   }
 
   return (
@@ -176,6 +191,12 @@ export function AdminShell() {
               <strong>Firebase not configured.</strong> Add Firebase keys to
               <code className="mx-1 font-mono bg-muted px-1 py-0.5 rounded">.env.local</code>
               to enable admin functions.
+            </div>
+          )}
+          {firebaseReady && !fbUser && (
+            <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-foreground leading-relaxed">
+              <strong>Password session.</strong> {GOOGLE_REQUIRED_MSG} Log out
+              and use Continue with Google.
             </div>
           )}
         </aside>

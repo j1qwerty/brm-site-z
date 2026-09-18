@@ -282,11 +282,17 @@ export async function saveSettings(
 export async function recordHistory(entry: Omit<CMSHistoryEntry, "id" | "timestamp">): Promise<void> {
   const db = getDb();
   if (!db) return;
-  await addDoc(collection(db, "cms_history"), {
-    ...entry,
-    timestamp: serverTimestamp(),
-    user: entry.user || ADMIN_USER,
-  });
+  try {
+    await addDoc(collection(db, "cms_history"), {
+      ...entry,
+      timestamp: serverTimestamp(),
+      user: entry.user || ADMIN_USER,
+    });
+  } catch (e) {
+    // History must never break the actual save - log and continue.
+    console.warn("[CMS] history write failed:", e);
+    return;
+  }
   // Trim to last 10 per (collection, docId) - run in background
   trimHistory(entry.collection, entry.docId).catch((e) =>
     console.warn("[CMS] history trim failed:", e)

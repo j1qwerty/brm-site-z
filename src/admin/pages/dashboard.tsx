@@ -13,6 +13,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (p: AdminPage) => v
   const [counts, setCounts] = useState<{ inquiries: number; contacts: number; trash: number; unread: number } | null>(
     () => (isFirebaseConfigured() ? null : { inquiries: 0, contacts: 0, trash: 0, unread: 0 })
   );
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isFirebaseConfigured()) return;
@@ -28,7 +29,13 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (p: AdminPage) => v
           unread,
         });
       })
-      .catch(() => { if (!cancelled) setCounts({ inquiries: 0, contacts: 0, trash: 0, unread: 0 }); });
+      .catch((e) => {
+        if (cancelled) return;
+        setCounts({ inquiries: 0, contacts: 0, trash: 0, unread: 0 });
+        if (e?.code === "permission-denied") {
+          setLoadError("Firestore denied access. Sign in with Google (password login has no database access), then reopen this page.");
+        }
+      });
     return () => { cancelled = true; };
   }, []);
 
@@ -48,6 +55,11 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (p: AdminPage) => v
         subtitle="Counts of everything happening across the site right now."
         action={<AdminButton variant="secondary" onClick={() => onNavigate("settings")}><Gear size={14} /> Settings</AdminButton>}
       />
+      {loadError && (
+        <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm">
+          {loadError}
+        </div>
+      )}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(({ label, value, hint, onClick, Icon }) => (
           <button

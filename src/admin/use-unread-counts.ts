@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { getDb, isFirebaseConfigured } from "@/lib/firebase";
+import { useFirebaseUser } from "@/lib/use-firebase-user";
 
 /*
   Live unread counters for the admin sidebar.
@@ -28,9 +29,13 @@ function countUnread(snap: { forEach: (cb: (d: { data: () => unknown }) => void)
 
 export function useUnreadCounts(enabled: boolean): UnreadCounts {
   const [counts, setCounts] = useState<UnreadCounts>({ inquiries: null, contacts: null });
+  // Only subscribe once Firebase Auth has resolved AND a Google user exists.
+  // Subscribing earlier (page refresh) gets permission-denied and kills the
+  // listener, so the badge would stay empty until the next login.
+  const { user, loading: authLoading } = useFirebaseUser();
 
   useEffect(() => {
-    if (!enabled || !isFirebaseConfigured()) return;
+    if (!enabled || authLoading || !user || !isFirebaseConfigured()) return;
     const db = getDb();
     if (!db) return;
 
@@ -48,7 +53,7 @@ export function useUnreadCounts(enabled: boolean): UnreadCounts {
       unsubInquiries();
       unsubContacts();
     };
-  }, [enabled]);
+  }, [enabled, authLoading, user]);
 
   return counts;
 }

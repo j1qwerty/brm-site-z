@@ -16,15 +16,22 @@ type TrashItem = {
 export function AdminTrash() {
   const { settings } = useCMS();
   const [items, setItems] = useState<TrashItem[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const reload = () => {
     if (!isFirebaseConfigured()) {
       setItems([]);
       return;
     }
+    setLoadError(null);
     loadDeletedItems<TrashItem>()
       .then((data) => setItems(data))
-      .catch(() => setItems([]));
+      .catch((e) => {
+        setItems([]);
+        if (e?.code === "permission-denied") {
+          setLoadError("Firestore denied access. Sign in with Google (password login has no database access), then press Refresh.");
+        }
+      });
   };
 
   useEffect(() => {
@@ -42,6 +49,11 @@ export function AdminTrash() {
         subtitle={`Soft-deleted items restorable here. Items auto-purged after ${autoDeleteDays} days (see Settings).`}
         action={<AdminButton variant="secondary" onClick={reload}>Refresh</AdminButton>}
       />
+      {loadError && (
+        <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm">
+          {loadError}
+        </div>
+      )}
       {items.length === 0 ? (
         <AdminEmptyState title="Trash is empty" body="Soft-deleted items will appear here until restored or auto-purged." />
       ) : (

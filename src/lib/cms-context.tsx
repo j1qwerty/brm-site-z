@@ -18,7 +18,8 @@ import {
   limit,
   getDoc,
 } from "firebase/firestore";
-import { isFirebaseConfigured, getDb } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { isFirebaseConfigured, getDb, getAuthClient } from "./firebase";
 import type {
   SectionId,
   ItemKind,
@@ -75,6 +76,17 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
   // Ready is true immediately if Firebase is not configured (no async work to do).
   // Otherwise it flips true after the effect subscribes.
   const [ready, setReady] = useState<boolean>(() => !configured);
+  // Bumped whenever Firebase Auth state changes (null -> user on refresh).
+  // Data subscriptions re-run so admin reads happen authenticated - with the
+  // tightened rules the first (unauthenticated) attempt fails terminally.
+  const [authTick, setAuthTick] = useState(0);
+
+  useEffect(() => {
+    if (!configured) return;
+    const auth = getAuthClient();
+    if (!auth) return;
+    return onAuthStateChanged(auth, () => setAuthTick((k) => k + 1));
+  }, [configured]);
 
   useEffect(() => {
     if (!configured) {
@@ -151,7 +163,7 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
       unsubItems();
       unsubSettings();
     };
-  }, [configured]);
+  }, [configured, authTick]);
 
   const value = useMemo<CMSContextValue>(
     () => ({
