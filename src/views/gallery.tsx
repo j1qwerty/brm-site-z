@@ -41,7 +41,6 @@ const FALLBACK_GALLERY: CMSGalleryItem[] = [
 export function GalleryView() {
   const [active, setActive] = useState<string>("All");
   const reduce = useReducedMotion();
-  const { setView } = useSite();
   const hero = useSection("gallery.hero", {
     eyebrow: "Gallery",
     headline: "An ordinary Tuesday, in pictures.",
@@ -166,30 +165,41 @@ export function GalleryView() {
 
       {/* Section 4: CTA */}
       <Section seed="gallery-cta" count={2} className="py-20 md:py-28">
-        <Reveal>
-          <div className="rounded-3xl bg-brand text-brand-foreground p-8 md:p-14 grid lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-8">
-              <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 text-balance">
-                Want to see it in person?
-              </h2>
-              <p className="text-base opacity-85 max-w-prose leading-relaxed">
-                Open houses run every Thursday at 9am, January through April.
-                Or schedule a private tour any weekday.
-              </p>
-            </div>
-            <div className="lg:col-span-4 lg:justify-self-end">
-              <button
-                type="button"
-                onClick={() => setView("inquiry")}
-                className="inline-flex items-center gap-2 px-6 py-4 rounded-full bg-amber text-amber-foreground font-medium hover:bg-amber/90 transition-colors"
-              >
-                Schedule a visit
-                <ArrowRight size={18} weight="bold" />
-              </button>
-            </div>
-          </div>
-        </Reveal>
+        <GalleryCTA />
       </Section>
     </>
+  );
+}
+
+function GalleryCTA() {
+  const { setView } = useSite();
+  const cta = useSection("gallery.cta", {
+    headline: "Want to see it in person?",
+    body: "Open houses run every Thursday at 9am, January through April. Or schedule a private tour any weekday.",
+    cta: "Schedule a visit",
+  });
+  return (
+    <Reveal>
+      <div className="rounded-3xl bg-brand text-brand-foreground p-8 md:p-14 grid lg:grid-cols-12 gap-8 items-center">
+        <div className="lg:col-span-8">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 text-balance">
+            {cta.headline}
+          </h2>
+          <p className="text-base opacity-85 max-w-prose leading-relaxed">
+            {cta.body}
+          </p>
+        </div>
+        <div className="lg:col-span-4 lg:justify-self-end">
+          <button
+            type="button"
+            onClick={() => setView("inquiry")}
+            className="inline-flex items-center gap-2 px-6 py-4 rounded-full bg-amber text-amber-foreground font-medium hover:bg-amber/90 transition-colors"
+          >
+            {cta.cta}
+            <ArrowRight size={18} weight="bold" />
+          </button>
+        </div>
+      </div>
+    </Reveal>
   );
 }

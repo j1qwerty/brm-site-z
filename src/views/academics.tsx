@@ -5,6 +5,8 @@ import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { Section } from "@/components/site/section";
 import { Parallax, Reveal, Stagger } from "@/components/site/motion-primitives";
 import { useSite } from "@/components/site/site-context";
+import { useSection } from "@/lib/cms-context";
+import { parseList } from "@/lib/cms-list";
 
 /*
   ACADEMICS VIEW - 7 sections
@@ -33,6 +35,12 @@ export function AcademicsView() {
 
 function AcademicsHero() {
   const reduce = useReducedMotion();
+  const s = useSection("academics.hero", {
+    eyebrow: "Academics",
+    headline: "A curriculum that compounds, year over year.",
+    subtext:
+      "Each grade band is designed to build on the last without gaps or repetition. The same faculty teach across the band, so they know exactly what your child learned the year before.",
+  });
   return (
     <Section seed="academics-hero" count={3} className="py-20 md:py-32 min-h-[78dvh] flex items-center">
       <div className="grid lg:grid-cols-12 gap-10 items-end w-full">
@@ -43,7 +51,7 @@ function AcademicsHero() {
             transition={{ duration: 0.6 }}
             className="text-xs uppercase tracking-[0.2em] font-mono text-amber mb-6"
           >
-            Academics
+            {s.eyebrow}
           </motion.p>
           <motion.h1
             initial={reduce ? false : { opacity: 0, y: 18 }}
@@ -51,7 +59,7 @@ function AcademicsHero() {
             transition={{ duration: 0.7, delay: 0.05 }}
             className="text-balance text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.02]"
           >
-            A curriculum that compounds, year over year.
+            {s.headline}
           </motion.h1>
         </div>
         <div className="lg:col-span-5">
@@ -61,9 +69,7 @@ function AcademicsHero() {
             transition={{ duration: 0.7, delay: 0.12 }}
             className="text-base text-muted-foreground leading-relaxed max-w-prose"
           >
-            Each grade band is designed to build on the last without gaps or
-            repetition. The same faculty teach across the band, so they know
-            exactly what your child learned the year before.
+            {s.subtext}
           </motion.p>
         </div>
       </div>
@@ -71,52 +77,68 @@ function AcademicsHero() {
   );
 }
 
+type BandSubject = { name: string; body: string };
+
+type CurriculumBand = {
+  band: string;
+  grades: string;
+  summary: string;
+  subjects: BandSubject[];
+};
+
+const DEFAULT_BANDS: CurriculumBand[] = [
+  {
+    band: "Lower School",
+    grades: "K through 5",
+    summary: "Foundational literacy, numeracy, and care for the natural world. Two teachers per classroom.",
+    subjects: [
+      { name: "Literacy", body: "Daily reader's and writer's workshop. Two hours per day across the band." },
+      { name: "Mathematics", body: "Singapore-style, conceptual first. 60 minutes daily." },
+      { name: "Science", body: "Three units per year, integrated with the school garden." },
+      { name: "Studio", body: "Visual art, music, and movement on a three-week rotation." },
+      { name: "Forest", body: "Wednesday afternoons, every week, in every weather." },
+    ],
+  },
+  {
+    band: "Middle School",
+    grades: "6 through 8",
+    summary: "Transition to disciplinary depth. Students move between specialist faculty for the first time.",
+    subjects: [
+      { name: "Humanities", body: "Integrated English and history. Three civilizations per year." },
+      { name: "Mathematics", body: "Pre-algebra in grade 6, algebra in grade 7, geometry in grade 8." },
+      { name: "Lab Science", body: "Physics, chemistry, biology, in rotation, taught as separate labs." },
+      { name: "World Languages", body: "Spanish, Mandarin, or French. Four years required to graduate." },
+      { name: "Arts", body: "Choose a primary and a secondary art. Both required each year." },
+    ],
+  },
+  {
+    band: "High School",
+    grades: "9 through 10",
+    summary: "College-prep with the grade 10 capstone, dual-enrollment, and independent study in a field of choice.",
+    subjects: [
+      { name: "English", body: "Two years. American, British, World, and a capstone-linked research seminar." },
+      { name: "Mathematics", body: "Algebra 2, Pre-calc, Calculus, Statistics, or Discrete Math." },
+      { name: "Science", body: "Three lab sciences required. AP option in each." },
+      { name: "History", body: "World, US, and a primary-source research seminar tied to the capstone." },
+      { name: "Capstone", body: "Year-long project, defended publicly in May. Required to graduate from grade 10." },
+    ],
+  },
+];
+
 function CurriculumBands() {
-  const bands = [
-    {
-      band: "Lower School",
-      grades: "K through 5",
-      summary: "Foundational literacy, numeracy, and care for the natural world. Two teachers per classroom.",
-      subjects: [
-        { name: "Literacy", body: "Daily reader's and writer's workshop. Two hours per day across the band." },
-        { name: "Mathematics", body: "Singapore-style, conceptual first. 60 minutes daily." },
-        { name: "Science", body: "Three units per year, integrated with the school garden." },
-        { name: "Studio", body: "Visual art, music, and movement on a three-week rotation." },
-        { name: "Forest", body: "Wednesday afternoons, every week, in every weather." },
-      ],
-    },
-    {
-      band: "Middle School",
-      grades: "6 through 8",
-      summary: "Transition to disciplinary depth. Students move between specialist faculty for the first time.",
-      subjects: [
-        { name: "Humanities", body: "Integrated English and history. Three civilizations per year." },
-        { name: "Mathematics", body: "Pre-algebra in grade 6, algebra in grade 7, geometry in grade 8." },
-        { name: "Lab Science", body: "Physics, chemistry, biology, in rotation, taught as separate labs." },
-        { name: "World Languages", body: "Spanish, Mandarin, or French. Four years required to graduate." },
-        { name: "Arts", body: "Choose a primary and a secondary art. Both required each year." },
-      ],
-    },
-    {
-      band: "High School",
-      grades: "9 through 10",
-      summary: "College-prep with the grade 10 capstone, dual-enrollment, and independent study in a field of choice.",
-      subjects: [
-        { name: "English", body: "Two years. American, British, World, and a capstone-linked research seminar." },
-        { name: "Mathematics", body: "Algebra 2, Pre-calc, Calculus, Statistics, or Discrete Math." },
-        { name: "Science", body: "Three lab sciences required. AP option in each." },
-        { name: "History", body: "World, US, and a primary-source research seminar tied to the capstone." },
-        { name: "Capstone", body: "Year-long project, defended publicly in May. Required to graduate from grade 10." },
-      ],
-    },
-  ];
+  const s = useSection("academics.bands", {
+    headline: "Curriculum by band",
+    intro:
+      "Three bands, each designed by the faculty who teach in it. Click into any subject for the full scope and sequence.",
+    bandsJson: JSON.stringify(DEFAULT_BANDS),
+  });
+  const bands = parseList<CurriculumBand>(s.bandsJson, DEFAULT_BANDS);
   return (
     <Section seed="academics-bands" count={2} className="py-24 md:py-32">
       <Reveal as="header" className="mb-12 max-w-2xl">
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Curriculum by band</h2>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">{s.headline}</h2>
         <p className="text-base text-muted-foreground">
-          Three bands, each designed by the faculty who teach in it. Click
-          into any subject for the full scope and sequence.
+          {s.intro}
         </p>
       </Reveal>
       <div className="space-y-12">
@@ -156,22 +178,30 @@ function CurriculumBands() {
   );
 }
 
+type Department = { name: string; lead: string; body: string; count: string };
+
+const DEFAULT_DEPARTMENTS: Department[] = [
+  { name: "Humanities & Literature", lead: "Ben Carter", body: "American literature to creative nonfiction. Senior seminar on primary-source research.", count: "7 faculty" },
+  { name: "Mathematics & Computing", lead: "Mei-Ling Park", body: "Singapore math through multivariable calculus. Three sections of computer science.", count: "5 faculty" },
+  { name: "Lab Sciences", lead: "Hugo Tanaka", body: "Physics, chemistry, biology. All taught as separate labs starting grade 6.", count: "6 faculty" },
+  { name: "World Languages", lead: "Lucia Marchetti", body: "Spanish, Mandarin, French. Four-year minimum requirement for graduation.", count: "4 faculty" },
+  { name: "Studio & Performance Arts", lead: "Marcus Bell", body: "Visual art, music, theater, film. Every student must ship a public work each year.", count: "8 faculty" },
+  { name: "Health & Wellness", lead: "Jen Okonkwo", body: "Movement, nutrition, mental health. Required weekly through grade 10.", count: "3 faculty" },
+];
+
 function DepartmentsList() {
-  const departments = [
-    { name: "Humanities & Literature", lead: "Ben Carter", body: "American literature to creative nonfiction. Senior seminar on primary-source research.", count: "7 faculty" },
-    { name: "Mathematics & Computing", lead: "Mei-Ling Park", body: "Singapore math through multivariable calculus. Three sections of computer science.", count: "5 faculty" },
-    { name: "Lab Sciences", lead: "Hugo Tanaka", body: "Physics, chemistry, biology. All taught as separate labs starting grade 6.", count: "6 faculty" },
-    { name: "World Languages", lead: "Lucia Marchetti", body: "Spanish, Mandarin, French. Four-year minimum requirement for graduation.", count: "4 faculty" },
-    { name: "Studio & Performance Arts", lead: "Marcus Bell", body: "Visual art, music, theater, film. Every student must ship a public work each year.", count: "8 faculty" },
-    { name: "Health & Wellness", lead: "Jen Okonkwo", body: "Movement, nutrition, mental health. Required weekly through grade 10.", count: "3 faculty" },
-  ];
+  const s = useSection("academics.departments", {
+    headline: "Departments",
+    intro: "Six departments, each led by a teaching department chair. Email any chair directly.",
+    departmentsJson: JSON.stringify(DEFAULT_DEPARTMENTS),
+  });
+  const departments = parseList<Department>(s.departmentsJson, DEFAULT_DEPARTMENTS);
   return (
     <Section seed="academics-departments" count={2} className="py-24 md:py-32 bg-muted/30">
       <Reveal as="header" className="mb-12 max-w-2xl">
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Departments</h2>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">{s.headline}</h2>
         <p className="text-base text-muted-foreground">
-          Six departments, each led by a teaching department chair. Email any
-          chair directly.
+          {s.intro}
         </p>
       </Reveal>
       <ul className="divide-y divide-border">
@@ -205,25 +235,40 @@ function DepartmentsList() {
   );
 }
 
+type ScheduleSlot = {
+  time: string;
+  mon: string;
+  tue: string;
+  wed: string;
+  thu: string;
+  fri: string;
+};
+
+const DEFAULT_SLOTS: ScheduleSlot[] = [
+  { time: "08:30", mon: "Morning meeting", tue: "Morning meeting", wed: "Morning meeting", thu: "Morning meeting", fri: "Morning meeting" },
+  { time: "09:00", mon: "Humanities block", tue: "Math block", wed: "Lab science", thu: "Humanities block", fri: "Math block" },
+  { time: "10:30", mon: "Studio art", tue: "World languages", wed: "Forest classroom", thu: "World languages", fri: "Music" },
+  { time: "12:00", mon: "Family lunch", tue: "Family lunch", wed: "Family lunch", thu: "Family lunch", fri: "Family lunch" },
+  { time: "13:00", mon: "Math workshop", tue: "Humanities block", wed: "Field study", thu: "Lab science", fri: "Independent reading" },
+  { time: "14:30", mon: "Movement", tue: "Movement", wed: "Field study", thu: "Movement", fri: "Advisory" },
+  { time: "15:30", mon: "Dismissal", tue: "Dismissal", wed: "Dismissal", thu: "Dismissal", fri: "Dismissal" },
+];
+
 function SampleSchedule() {
   // Per taste-skill §4.9: long lists need a different UI. A weekly grid IS the right UI for a schedule.
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-  const slots = [
-    { time: "08:30", mon: "Morning meeting", tue: "Morning meeting", wed: "Morning meeting", thu: "Morning meeting", fri: "Morning meeting" },
-    { time: "09:00", mon: "Humanities block", tue: "Math block", wed: "Lab science", thu: "Humanities block", fri: "Math block" },
-    { time: "10:30", mon: "Studio art", tue: "World languages", wed: "Forest classroom", thu: "World languages", fri: "Music" },
-    { time: "12:00", mon: "Family lunch", tue: "Family lunch", wed: "Family lunch", thu: "Family lunch", fri: "Family lunch" },
-    { time: "13:00", mon: "Math workshop", tue: "Humanities block", wed: "Field study", thu: "Lab science", fri: "Independent reading" },
-    { time: "14:30", mon: "Movement", tue: "Movement", wed: "Field study", thu: "Movement", fri: "Advisory" },
-    { time: "15:30", mon: "Dismissal", tue: "Dismissal", wed: "Dismissal", thu: "Dismissal", fri: "Dismissal" },
-  ];
+  const s = useSection("academics.schedule", {
+    headline: "Sample week, grade 7",
+    intro: "Real schedule from spring 2026. Wednesday afternoons are dedicated to field study, every week.",
+    slotsJson: JSON.stringify(DEFAULT_SLOTS),
+  });
+  const slots = parseList<ScheduleSlot>(s.slotsJson, DEFAULT_SLOTS);
   return (
     <Section seed="academics-schedule" count={2} className="py-24 md:py-32">
       <Reveal as="header" className="mb-12 max-w-2xl">
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Sample week, grade 7</h2>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">{s.headline}</h2>
         <p className="text-base text-muted-foreground">
-          Real schedule from spring 2026. Wednesday afternoons are dedicated
-          to field study, every week.
+          {s.intro}
         </p>
       </Reveal>
       <Reveal>
@@ -259,36 +304,97 @@ function SampleSchedule() {
   );
 }
 
+type OutcomeStat = { value: string; label: string };
+
+type OutcomesData = {
+  stats: OutcomeStat[];
+  colleges: string[];
+  capstones: string[];
+};
+
+const DEFAULT_STATS: OutcomeStat[] = [
+  { value: "94%", label: "Matriculate to first-choice" },
+  { value: "87%", label: "Graduate in four years" },
+  { value: "2.4", label: "Avg. college credit on entry" },
+];
+
+const DEFAULT_COLLEGES: string[] = [
+  "Reed",
+  "Lewis & Clark",
+  "Whitman",
+  "Willamette",
+  "Oberlin",
+  "Wesleyan",
+  "Beloit",
+  "Macalester",
+  "Pomona",
+  "Colorado College",
+  "Evergreen",
+  "MIT",
+  "Cornell",
+  "Stanford",
+  "UW Honors",
+];
+
+const DEFAULT_CAPSTONES: string[] = [
+  "Designing a low-cost water sensor for the Cooper River watershed",
+  "Translating a previously untranslated Borges short story",
+  "A statistical history of Pacific Northwest heat waves",
+  "An original one-act play, performed in the black box",
+];
+
+const DEFAULT_OUTCOMES: OutcomesData = {
+  stats: DEFAULT_STATS,
+  colleges: DEFAULT_COLLEGES,
+  capstones: DEFAULT_CAPSTONES,
+};
+
+function parseOutcomesData(raw: unknown): OutcomesData {
+  try {
+    const parsed: unknown = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const o = parsed as Record<string, unknown>;
+      return {
+        stats: parseList<OutcomeStat>(o.stats, DEFAULT_STATS),
+        colleges: parseList<string>(o.colleges, DEFAULT_COLLEGES),
+        capstones: parseList<string>(o.capstones, DEFAULT_CAPSTONES),
+      };
+    }
+  } catch {
+    /* fall through to defaults */
+  }
+  return DEFAULT_OUTCOMES;
+}
+
 function OutcomesSection() {
-  const colleges = [
-    "Reed", "Lewis & Clark", "Whitman", "Willamette", "Oberlin", "Wesleyan", "Beloit", "Macalester", "Pomona", "Colorado College", "Evergreen", "MIT", "Cornell", "Stanford", "UW Honors",
-  ];
+  const s = useSection("academics.outcomes", {
+    headline: "Where our graduates go",
+    intro:
+      "Our college counselor does not chase rankings. Our students pick schools that fit who they are. The list below is the past five graduating classes.",
+    outcomesJson: JSON.stringify(DEFAULT_OUTCOMES),
+  });
+  const outcomes = parseOutcomesData(s.outcomesJson);
+  const stats = outcomes.stats;
+  const colleges = outcomes.colleges;
+  const capstones = outcomes.capstones;
   return (
     <Section seed="academics-outcomes" count={2} className="py-24 md:py-32 bg-muted/30">
       <div className="grid lg:grid-cols-12 gap-10">
         <div className="lg:col-span-5">
           <Reveal as="header">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Where our graduates go</h2>
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">{s.headline}</h2>
             <p className="text-base text-muted-foreground max-w-prose leading-relaxed">
-              Our college counselor does not chase rankings. Our students pick
-              schools that fit who they are. The list below is the past five
-              graduating classes.
+              {s.intro}
             </p>
           </Reveal>
           <Reveal delay={0.1}>
             <div className="mt-8 grid grid-cols-3 gap-6">
-              <div>
-                <p className="text-3xl font-bold tracking-tighter text-amber">94%</p>
-                <p className="text-xs text-muted-foreground mt-1">Matriculate to first-choice</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold tracking-tighter text-amber">87%</p>
-                <p className="text-xs text-muted-foreground mt-1">Graduate in four years</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold tracking-tighter text-amber">2.4</p>
-                <p className="text-xs text-muted-foreground mt-1">Avg. college credit on entry</p>
-              </div>
+              {stats.map((stat) => (
+                <div key={stat.label}>
+                  <p className="text-3xl font-bold tracking-tighter text-amber">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+                </div>
+              ))}
             </div>
           </Reveal>
         </div>
@@ -309,10 +415,9 @@ function OutcomesSection() {
                 Grade 10 capstones, 2025
               </p>
               <ul className="space-y-2 text-sm">
-                <li><span className="text-amber font-mono mr-2">·</span>Designing a low-cost water sensor for the Cooper River watershed</li>
-                <li><span className="text-amber font-mono mr-2">·</span>Translating a previously untranslated Borges short story</li>
-                <li><span className="text-amber font-mono mr-2">·</span>A statistical history of Pacific Northwest heat waves</li>
-                <li><span className="text-amber font-mono mr-2">·</span>An original one-act play, performed in the black box</li>
+                {capstones.map((cap) => (
+                  <li key={cap}><span className="text-amber font-mono mr-2">·</span>{cap}</li>
+                ))}
               </ul>
             </div>
           </Reveal>
@@ -322,26 +427,33 @@ function OutcomesSection() {
   );
 }
 
+const DEFAULT_PARTNERS: string[] = [
+  "Willowbrook Watershed Council",
+  "Oregon State Marine Board",
+  "Portland Museum of Craft",
+  "Reed College Biology",
+  "Oregon Zoo",
+  "Bicycle Transportation Alliance",
+  "Portland City Archives",
+  "Zenodo Open Data",
+  "Ecotrust",
+  "Pacific Northwest College of Art",
+];
+
 function FieldStudies() {
   // Per taste-skill §5: marquee is at most ONE per page. This is the one.
-  const partners = [
-    "Willowbrook Watershed Council",
-    "Oregon State Marine Board",
-    "Portland Museum of Craft",
-    "Reed College Biology",
-    "Oregon Zoo",
-    "Bicycle Transportation Alliance",
-    "Portland City Archives",
-    "Zenodo Open Data",
-    "Ecotrust",
-    "Pacific Northwest College of Art",
-  ];
+  const s = useSection("academics.field_studies", {
+    headline: "Field studies & partners",
+    intro: "Real organizations our students work with, every year.",
+    partnersJson: JSON.stringify(DEFAULT_PARTNERS),
+  });
+  const partners = parseList<string>(s.partnersJson, DEFAULT_PARTNERS);
   return (
     <Section seed="academics-field" count={2} className="py-24 md:py-32 overflow-hidden">
       <Reveal as="header" className="mb-10 max-w-2xl">
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Field studies & partners</h2>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">{s.headline}</h2>
         <p className="text-base text-muted-foreground">
-          Real organizations our students work with, every year.
+          {s.intro}
         </p>
       </Reveal>
       <div className="relative overflow-hidden">
@@ -367,17 +479,21 @@ function FieldStudies() {
 }
 
 function AcademicsCTA({ onInquire }: { onInquire: () => void }) {
+  const s = useSection("academics.cta", {
+    headline: "Talk to a department chair.",
+    body: "Each chair runs an open office hour every Thursday. Bring your questions, leave with a syllabus and a reading list.",
+    cta: "Book office hour",
+  });
   return (
     <Section seed="academics-cta" count={2} className="py-24 md:py-32">
       <Reveal>
         <div className="rounded-3xl bg-brand text-brand-foreground p-8 md:p-14 grid lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-8">
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 text-balance">
-              Talk to a department chair.
+              {s.headline}
             </h2>
             <p className="text-base opacity-85 max-w-prose leading-relaxed">
-              Each chair runs an open office hour every Thursday. Bring your
-              questions, leave with a syllabus and a reading list.
+              {s.body}
             </p>
           </div>
           <div className="lg:col-span-4 lg:justify-self-end">
@@ -386,7 +502,7 @@ function AcademicsCTA({ onInquire }: { onInquire: () => void }) {
               onClick={onInquire}
               className="inline-flex items-center gap-2 px-6 py-4 rounded-full bg-amber text-amber-foreground font-medium hover:bg-amber/90 transition-colors"
             >
-              Book office hour
+              {s.cta}
               <ArrowRight size={18} weight="bold" />
             </button>
           </div>

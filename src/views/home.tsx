@@ -15,6 +15,7 @@ import { Section, FullWidthSection } from "@/components/site/section";
 import { Parallax, Reveal, Stagger } from "@/components/site/motion-primitives";
 import { useSite } from "@/components/site/site-context";
 import { useSection, useItemList } from "@/lib/cms-context";
+import { parseList } from "@/lib/cms-list";
 import type { EventItem, VideoItem, FAQItem } from "@/lib/cms-types";
 import {
   Accordion,
@@ -64,6 +65,18 @@ export function HomeView() {
 function HeroSection() {
   const reduce = useReducedMotion();
   const { setView } = useSite();
+  const s = useSection("home.hero", {
+    eyebrow: "Now enrolling grades K through 10",
+    headline: "A school where curiosity becomes craft.",
+    subtext:
+      "Independent K-10 education built on small classes, real projects, and a community that knows your child by name.",
+    primaryCta: "Visit campus",
+    secondaryCta: "Explore programs",
+    heroImage: "https://picsum.photos/seed/brm-hero-students/640/800",
+    heroImageAlt: "BRM International School students working on a group project in the studio",
+    captionKicker: "Studio hour, Tuesday",
+    captionTitle: "Grade 9 marine biology field study",
+  });
   return (
     <Section seed="home-hero" count={2} className="pt-12 pb-24 md:pt-16 md:pb-32 min-h-[92dvh] flex items-center">
       <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center w-full">
@@ -74,7 +87,7 @@ function HeroSection() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="text-xs uppercase tracking-[0.2em] font-mono text-amber"
           >
-            Now enrolling grades K through 10
+            {s.eyebrow}
           </motion.p>
           <motion.h1
             initial={reduce ? false : { opacity: 0, y: 18 }}
@@ -82,7 +95,7 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
             className="text-balance text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-bold tracking-tighter leading-[1.05]"
           >
-            A school where curiosity becomes craft.
+            {s.headline}
           </motion.h1>
           <motion.p
             initial={reduce ? false : { opacity: 0, y: 12 }}
@@ -90,8 +103,7 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             className="text-lg text-muted-foreground max-w-[60ch] leading-relaxed"
           >
-            Independent K-10 education built on small classes, real projects,
-            and a community that knows your child by name.
+            {s.subtext}
           </motion.p>
           <motion.div
             initial={reduce ? false : { opacity: 0, y: 12 }}
@@ -104,7 +116,7 @@ function HeroSection() {
               onClick={() => setView("contact")}
               className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-brand text-brand-foreground font-medium hover:bg-brand/90 transition-colors"
             >
-              Visit campus
+              {s.primaryCta}
               <ArrowRight size={16} weight="bold" />
             </button>
             <button
@@ -113,7 +125,7 @@ function HeroSection() {
               className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-border hover:border-amber/60 hover:text-amber transition-colors"
             >
               <Play size={14} weight="fill" />
-              Explore programs
+              {s.secondaryCta}
             </button>
           </motion.div>
         </div>
@@ -121,8 +133,8 @@ function HeroSection() {
         <div className="lg:col-span-5">
           <Parallax offset={40} className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted">
             <img
-              src="https://picsum.photos/seed/brm-hero-students/640/800"
-              alt="BRM International School students working on a group project in the studio"
+              src={s.heroImage}
+              alt={s.heroImageAlt}
               className="w-full h-full object-cover"
               loading="eager"
               width={640}
@@ -131,9 +143,9 @@ function HeroSection() {
             <div className="absolute inset-0 bg-gradient-to-t from-brand/40 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4 text-brand-foreground">
               <p className="text-xs font-mono uppercase tracking-[0.16em] opacity-80">
-                Studio hour, Tuesday
+                {s.captionKicker}
               </p>
-              <p className="text-base font-medium">Grade 9 marine biology field study</p>
+              <p className="text-base font-medium">{s.captionTitle}</p>
             </div>
           </Parallax>
         </div>
@@ -143,24 +155,32 @@ function HeroSection() {
 }
 
 /* ---------- Section 2: Stats row - 4 large display tiles ---------- */
+type Stat = { value: string; label: string };
+
+const DEFAULT_STATS: Stat[] = [
+  { value: "1:7", label: "Faculty to student ratio" },
+  { value: "82", label: "Faculty with advanced degrees" },
+  { value: "K-10", label: "Continuous, integrated curriculum" },
+  { value: "1998", label: "Year founded" },
+];
+
 function StatsRow() {
-  const stats = [
-    { value: "1:7", label: "Faculty to student ratio" },
-    { value: "82", label: "Faculty with advanced degrees" },
-    { value: "K-10", label: "Continuous, integrated curriculum" },
-    { value: "1998", label: "Year founded" },
-  ];
+  const s = useSection("home.stats", {
+    title: "Numbers from the school",
+    statsJson: JSON.stringify(DEFAULT_STATS),
+  });
+  const stats = parseList<Stat>(s.statsJson, DEFAULT_STATS);
   return (
     <FullWidthSection seed="home-stats" count={2} className="border-y border-border/60 bg-muted/30 py-16 md:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6">
-          {stats.map((s) => (
-            <Stagger.Item key={s.label}>
+          {stats.map((stat) => (
+            <Stagger.Item key={stat.label}>
               <div className="space-y-2">
                 <p className="text-5xl md:text-6xl font-bold tracking-tighter text-brand">
-                  {s.value}
+                  {stat.value}
                 </p>
-                <p className="text-sm text-muted-foreground max-w-[18ch]">{s.label}</p>
+                <p className="text-sm text-muted-foreground max-w-[18ch]">{stat.label}</p>
               </div>
             </Stagger.Item>
           ))}
@@ -172,17 +192,20 @@ function StatsRow() {
 
 /* ---------- Section 3: Mission editorial ---------- */
 function MissionStatement() {
+  const s = useSection("home.mission", {
+    quote:
+      "We believe children are already capable people. Our job is not to fill them, but to give them the tools, time, and trust to do work that matters.",
+    attribution: "Mara Bishop, Head of School",
+  });
   return (
     <Section seed="home-mission" count={3} className="py-24 md:py-36">
       <Reveal as="header" className="max-w-4xl mx-auto text-center">
         <Quotes size={32} className="text-amber mx-auto mb-6" weight="fill" />
         <p className="text-2xl md:text-4xl leading-[1.25] font-medium tracking-tight text-balance">
-          We believe children are already capable people. Our job is not to
-          fill them, but to give them the tools, time, and trust to do work
-          that matters.
+          {s.quote}
         </p>
         <p className="mt-6 text-sm text-muted-foreground font-mono">
-          Mara Bishop, Head of School
+          {s.attribution}
         </p>
       </Reveal>
     </Section>
@@ -190,42 +213,51 @@ function MissionStatement() {
 }
 
 /* ---------- Section 4: Programs by level - asymmetric grid ---------- */
+type Program = { grade: string; range: string; blurb: string; image: string; big: boolean };
+
+const DEFAULT_PROGRAMS: Program[] = [
+  {
+    grade: "Lower School",
+    range: "Grades K through 5",
+    blurb:
+      "Play-based foundations in literacy, numeracy, and the natural world. Two teachers per classroom.",
+    image: "https://picsum.photos/seed/brm-lower-school-classroom/800/600",
+    big: true,
+  },
+  {
+    grade: "Middle School",
+    range: "Grades 6 through 8",
+    blurb:
+      "Transition to disciplinary depth with integrated humanities, lab science, and the arts.",
+    image: "https://picsum.photos/seed/brm-middle-school-lab/600/400",
+    big: false,
+  },
+  {
+    grade: "High School",
+    range: "Grades 9 through 10",
+    blurb:
+      "College-prep with the grade 10 capstone, dual-enrollment, and independent study in a field of choice.",
+    image: "https://picsum.photos/seed/brm-high-school-seminar/600/400",
+    big: false,
+  },
+];
+
 function ProgramsSection() {
-  const programs = [
-    {
-      grade: "Lower School",
-      range: "Grades K through 5",
-      blurb:
-        "Play-based foundations in literacy, numeracy, and the natural world. Two teachers per classroom.",
-      image: "https://picsum.photos/seed/brm-lower-school-classroom/800/600",
-      big: true,
-    },
-    {
-      grade: "Middle School",
-      range: "Grades 6 through 8",
-      blurb:
-        "Transition to disciplinary depth with integrated humanities, lab science, and the arts.",
-      image: "https://picsum.photos/seed/brm-middle-school-lab/600/400",
-      big: false,
-    },
-    {
-      grade: "High School",
-      range: "Grades 9 through 10",
-      blurb:
-        "College-prep with the grade 10 capstone, dual-enrollment, and independent study in a field of choice.",
-      image: "https://picsum.photos/seed/brm-high-school-seminar/600/400",
-      big: false,
-    },
-  ];
+  const s = useSection("home.programs", {
+    headline: "Programs by level",
+    intro:
+      "A continuous curriculum from kindergarten through grade 10, designed so each grade builds on the last without gaps or repetition.",
+    programsJson: JSON.stringify(DEFAULT_PROGRAMS),
+  });
+  const programs = parseList<Program>(s.programsJson, DEFAULT_PROGRAMS);
   return (
     <Section id="home-programs" seed="home-programs" count={2} className="py-24 md:py-32">
       <Reveal as="header" className="max-w-2xl mb-12">
         <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">
-          Programs by level
+          {s.headline}
         </h2>
         <p className="text-base text-muted-foreground max-w-prose">
-          A continuous curriculum from kindergarten through grade 10,
-          designed so each grade builds on the last without gaps or repetition.
+          {s.intro}
         </p>
       </Reveal>
 
@@ -267,33 +299,46 @@ function ProgramsSection() {
 }
 
 /* ---------- Section 5: Faculty spotlight - split image + bio (zigzag single use) ---------- */
+const DEFAULT_CREDENTIALS: string[] = [
+  "14 years teaching",
+  "B.S. Mechanical Engineering",
+  "STEAM cohort lead",
+];
+
 function FacultySpotlight() {
+  const s = useSection("home.faculty", {
+    eyebrow: "Faculty spotlight",
+    headline: "Hugo Tanaka teaches grade 7 physics with bike wheels and stopwatches.",
+    body1:
+      "Before joining BRM in 2014, Hugo built test rigs at a bicycle manufacturer. He brings that same hands-on discipline into his classroom, where students learn force and motion by building, instrumenting, and breaking things on purpose.",
+    body2:
+      "His students keep a field notebook that travels with them through eighth grade, a record of every measurement, hypothesis, and wrong turn they made along the way.",
+    facultyImage: "https://picsum.photos/seed/brm-faculty-hugo/640/800",
+    facultyImageAlt: "Hugo Tanaka, middle school science teacher",
+    credentialsJson: JSON.stringify(DEFAULT_CREDENTIALS),
+  });
+  const credentials = parseList<string>(s.credentialsJson, DEFAULT_CREDENTIALS);
   return (
     <Section seed="home-faculty" count={3} className="py-24 md:py-32 bg-muted/30">
       <div className="grid lg:grid-cols-12 gap-10 items-center">
         <div className="lg:col-span-6 order-2 lg:order-1">
           <Reveal>
             <p className="text-xs uppercase tracking-[0.2em] font-mono text-amber mb-3">
-              Faculty spotlight
+              {s.eyebrow}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-balance">
-              Hugo Tanaka teaches grade 7 physics with bike wheels and stopwatches.
+              {s.headline}
             </h2>
             <p className="text-base text-muted-foreground max-w-prose leading-relaxed mb-4">
-              Before joining BRM in 2014, Hugo built test rigs at a bicycle
-              manufacturer. He brings that same hands-on discipline into his
-              classroom, where students learn force and motion by building,
-              instrumenting, and breaking things on purpose.
+              {s.body1}
             </p>
             <p className="text-base text-muted-foreground max-w-prose leading-relaxed">
-              His students keep a field notebook that travels with them through
-              eighth grade, a record of every measurement, hypothesis, and
-              wrong turn they made along the way.
+              {s.body2}
             </p>
             <div className="mt-6 flex flex-wrap gap-6 text-xs font-mono uppercase tracking-[0.14em] text-muted-foreground">
-              <span>14 years teaching</span>
-              <span>B.S. Mechanical Engineering</span>
-              <span>STEAM cohort lead</span>
+              {credentials.map((c) => (
+                <span key={c}>{c}</span>
+              ))}
             </div>
           </Reveal>
         </div>
@@ -301,8 +346,8 @@ function FacultySpotlight() {
           <Parallax offset={50}>
             <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-muted">
               <img
-                src="https://picsum.photos/seed/brm-faculty-hugo/640/800"
-                alt="Hugo Tanaka, middle school science teacher"
+                src={s.facultyImage}
+                alt={s.facultyImageAlt}
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
@@ -316,15 +361,44 @@ function FacultySpotlight() {
 
 /* ---------- Section 6: Why BRM - bento grid with varied cell sizes ---------- */
 function WhyBRMBento() {
+  const s = useSection("home.why", {
+    headline: "Why families choose BRM",
+    intro:
+      "Eight reasons that came up again and again in conversations with current parents and alumni.",
+    heroImage: "https://picsum.photos/seed/brm-why-campus-walk/800/800",
+    heroImageAlt: "A student walking between studio buildings on campus",
+    heroTitle: "A walkable campus that scales with your child",
+    heroBody:
+      "Twelve buildings, four gardens, one learning community that runs from kindergarten through grade 10.",
+    smallTitle: "Small by design",
+    smallBody:
+      "Cap of 18 students per class, 22 per grade. The faculty know each student as a person, not a name on a roster.",
+    ratioValue: "7:1",
+    ratioLabel: "Faculty-to-student ratio across the school.",
+    capstoneTitle: "Grade 10 capstone",
+    capstoneBody:
+      "Every grade 10 student ships a year-long project. Defended publicly in May.",
+    outdoorTitle: "Outdoor education, weekly",
+    outdoorBody:
+      "Every Wednesday afternoon, regardless of weather. The forest is part of the curriculum, not a reward for finishing it.",
+    aidTitle: "Financial aid that actually scales",
+    aidBody:
+      "38% of families receive need-based aid. The average award covers 47% of tuition. Apply without affecting admission odds.",
+    counselingTitle: "College counseling that starts in 9th grade",
+    counselingBody:
+      "One counselor per 25 students. Four years to find the right fit, not four months to fill out applications.",
+    lunchTitle: "Family-style lunch",
+    lunchBody:
+      "Mixed-age tables, faculty hosts, real food from the school garden. The most underrated part of the day.",
+  });
   return (
     <Section seed="home-why-bento" count={3} className="py-24 md:py-32">
       <Reveal as="header" className="mb-12 max-w-2xl">
         <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">
-          Why families choose BRM
+          {s.headline}
         </h2>
         <p className="text-base text-muted-foreground">
-          Eight reasons that came up again and again in conversations with
-          current parents and alumni.
+          {s.intro}
         </p>
       </Reveal>
 
@@ -333,19 +407,18 @@ function WhyBRMBento() {
         <Reveal className="md:col-span-2 md:row-span-2">
           <div className="relative w-full h-full rounded-2xl overflow-hidden">
             <img
-              src="https://picsum.photos/seed/brm-why-campus-walk/800/800"
-              alt="A student walking between studio buildings on campus"
+              src={s.heroImage}
+              alt={s.heroImageAlt}
               className="w-full h-full object-cover"
               loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-brand/70 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6 text-brand-foreground">
               <h3 className="text-xl font-bold tracking-tight mb-1">
-                A walkable campus that scales with your child
+                {s.heroTitle}
               </h3>
               <p className="text-sm opacity-85">
-                Twelve buildings, four gardens, one learning community that
-                runs from kindergarten through grade 10.
+                {s.heroBody}
               </p>
             </div>
           </div>
@@ -353,28 +426,27 @@ function WhyBRMBento() {
 
         <Reveal delay={0.05} className="md:col-span-2">
           <div className="w-full h-full rounded-2xl border border-border p-6 bg-card">
-            <h3 className="text-xl font-bold tracking-tight mb-2">Small by design</h3>
+            <h3 className="text-xl font-bold tracking-tight mb-2">{s.smallTitle}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Cap of 18 students per class, 22 per grade. The faculty know each
-              student as a person, not a name on a roster.
+              {s.smallBody}
             </p>
           </div>
         </Reveal>
 
         <Reveal delay={0.1}>
           <div className="w-full h-full rounded-2xl bg-amber/15 p-6">
-            <p className="text-4xl font-bold tracking-tighter text-amber mb-1">7:1</p>
+            <p className="text-4xl font-bold tracking-tighter text-amber mb-1">{s.ratioValue}</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Faculty-to-student ratio across the school.
+              {s.ratioLabel}
             </p>
           </div>
         </Reveal>
 
         <Reveal delay={0.15}>
           <div className="w-full h-full rounded-2xl border border-border p-6 bg-card">
-            <h3 className="text-base font-bold tracking-tight mb-2">Grade 10 capstone</h3>
+            <h3 className="text-base font-bold tracking-tight mb-2">{s.capstoneTitle}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Every grade 10 student ships a year-long project. Defended publicly in May.
+              {s.capstoneBody}
             </p>
           </div>
         </Reveal>
@@ -382,11 +454,10 @@ function WhyBRMBento() {
         <Reveal delay={0.2} className="md:col-span-2">
           <div className="w-full h-full rounded-2xl border border-border p-6 bg-card">
             <h3 className="text-base font-bold tracking-tight mb-2">
-              Outdoor education, weekly
+              {s.outdoorTitle}
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Every Wednesday afternoon, regardless of weather. The forest is
-              part of the curriculum, not a reward for finishing it.
+              {s.outdoorBody}
             </p>
           </div>
         </Reveal>
@@ -394,11 +465,10 @@ function WhyBRMBento() {
         <Reveal delay={0.25} className="md:col-span-2">
           <div className="w-full h-full rounded-2xl bg-brand text-brand-foreground p-6 flex flex-col justify-between">
             <h3 className="text-base font-bold tracking-tight mb-2">
-              Financial aid that actually scales
+              {s.aidTitle}
             </h3>
             <p className="text-sm opacity-85 leading-relaxed">
-              38% of families receive need-based aid. The average award covers
-              47% of tuition. Apply without affecting admission odds.
+              {s.aidBody}
             </p>
           </div>
         </Reveal>
@@ -406,11 +476,10 @@ function WhyBRMBento() {
         <Reveal delay={0.3} className="md:col-span-2">
           <div className="w-full h-full rounded-2xl border border-border p-6 bg-card">
             <h3 className="text-base font-bold tracking-tight mb-2">
-              College counseling that starts in 9th grade
+              {s.counselingTitle}
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              One counselor per 25 students. Four years to find the right
-              fit, not four months to fill out applications.
+              {s.counselingBody}
             </p>
           </div>
         </Reveal>
@@ -418,11 +487,10 @@ function WhyBRMBento() {
         <Reveal delay={0.35} className="md:col-span-2">
           <div className="w-full h-full rounded-2xl border border-border p-6 bg-card">
             <h3 className="text-base font-bold tracking-tight mb-2">
-              Family-style lunch
+              {s.lunchTitle}
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Mixed-age tables, faculty hosts, real food from the school
-              garden. The most underrated part of the day.
+              {s.lunchBody}
             </p>
           </div>
         </Reveal>
@@ -432,38 +500,47 @@ function WhyBRMBento() {
 }
 
 /* ---------- Section 7: Testimonials - horizontal scroll-snap (NOT a marquee) ---------- */
+type Testimonial = { quote: string; name: string; role: string };
+
+const DEFAULT_TESTIMONIALS: Testimonial[] = [
+  {
+    quote: "Our daughter came home talking about tectonic plates for three weeks. We didn't know what to do, but we loved it.",
+    name: "Priya Ramanathan",
+    role: "Parent, grade 4",
+  },
+  {
+    quote: "The capstone program is the closest thing to real work I've ever asked students to do.",
+    name: "David Cho",
+    role: "High School faculty",
+  },
+  {
+    quote: "I was nervous about the transition from public school. The faculty made space for who my kid already was.",
+    name: "Aisha Okonkwo",
+    role: "Parent, grade 7",
+  },
+  {
+    quote: "They told me I had to defend my senior project in front of the whole school. I have never been more prepared for anything.",
+    name: "Theo Vandermeer",
+    role: "Alumnus, class of 2023",
+  },
+];
+
 function TestimonialsSection() {
-  const testimonials = [
-    {
-      quote: "Our daughter came home talking about tectonic plates for three weeks. We didn't know what to do, but we loved it.",
-      name: "Priya Ramanathan",
-      role: "Parent, grade 4",
-    },
-    {
-      quote: "The capstone program is the closest thing to real work I've ever asked students to do.",
-      name: "David Cho",
-      role: "High School faculty",
-    },
-    {
-      quote: "I was nervous about the transition from public school. The faculty made space for who my kid already was.",
-      name: "Aisha Okonkwo",
-      role: "Parent, grade 7",
-    },
-    {
-      quote: "They told me I had to defend my senior project in front of the whole school. I have never been more prepared for anything.",
-      name: "Theo Vandermeer",
-      role: "Alumnus, class of 2023",
-    },
-  ];
+  const s = useSection("home.testimonials", {
+    headline: "What families say",
+    intro: "Pulled from a survey of current parents and 2024 alumni.",
+    testimonialsJson: JSON.stringify(DEFAULT_TESTIMONIALS),
+  });
+  const testimonials = parseList<Testimonial>(s.testimonialsJson, DEFAULT_TESTIMONIALS);
   return (
     <Section seed="home-testimonials" count={2} className="py-24 md:py-32 bg-muted/30">
       <Reveal as="header" className="mb-10 flex flex-wrap justify-between gap-4">
         <div>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">
-            What families say
+            {s.headline}
           </h2>
           <p className="text-base text-muted-foreground max-w-prose">
-            Pulled from a survey of current parents and 2024 alumni.
+            {s.intro}
           </p>
         </div>
       </Reveal>
@@ -493,25 +570,34 @@ function TestimonialsSection() {
 }
 
 /* ---------- Section 8: Campus life preview - masonry teaser ---------- */
+type CampusImage = { src: string; alt: string; tall?: boolean };
+
+const DEFAULT_CAMPUS_IMAGES: CampusImage[] = [
+  { src: "https://picsum.photos/seed/brm-campus-library/600/800", alt: "Students reading in the library", tall: true },
+  { src: "https://picsum.photos/seed/brm-campus-studio/600/500", alt: "Studio art class in progress" },
+  { src: "https://picsum.photos/seed/brm-campus-garden/600/600", alt: "Working in the school garden" },
+  { src: "https://picsum.photos/seed/brm-campus-cafeteria/600/700", alt: "Family-style lunch", tall: true },
+  { src: "https://picsum.photos/seed/brm-campus-stage/600/450", alt: "Theater rehearsal" },
+  { src: "https://picsum.photos/seed/brm-campus-court/600/700", alt: "Outdoor basketball", tall: true },
+];
+
 function CampusPreview() {
   const { setView } = useSite();
-  const images = [
-    { src: "https://picsum.photos/seed/brm-campus-library/600/800", alt: "Students reading in the library", tall: true },
-    { src: "https://picsum.photos/seed/brm-campus-studio/600/500", alt: "Studio art class in progress" },
-    { src: "https://picsum.photos/seed/brm-campus-garden/600/600", alt: "Working in the school garden" },
-    { src: "https://picsum.photos/seed/brm-campus-cafeteria/600/700", alt: "Family-style lunch", tall: true },
-    { src: "https://picsum.photos/seed/brm-campus-stage/600/450", alt: "Theater rehearsal" },
-    { src: "https://picsum.photos/seed/brm-campus-court/600/700", alt: "Outdoor basketball", tall: true },
-  ];
+  const s = useSection("home.campus_preview", {
+    headline: "Campus life",
+    intro: "A glimpse of an ordinary Tuesday.",
+    imagesJson: JSON.stringify(DEFAULT_CAMPUS_IMAGES),
+  });
+  const images = parseList<CampusImage>(s.imagesJson, DEFAULT_CAMPUS_IMAGES);
   return (
     <Section seed="home-campus-preview" count={3} className="py-24 md:py-32">
       <Reveal as="header" className="mb-10 flex flex-wrap justify-between gap-4 items-end">
         <div className="max-w-xl">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">
-            Campus life
+            {s.headline}
           </h2>
           <p className="text-base text-muted-foreground">
-            A glimpse of an ordinary Tuesday.
+            {s.intro}
           </p>
         </div>
         <button
@@ -817,34 +903,47 @@ function HomeFAQ() {
 }
 
 /* ---------- Section 13: News + admissions CTA - split 2/1 ---------- */
+type NewsCard = { tag: string; date: string; title: string; excerpt: string };
+
+const DEFAULT_NEWS: NewsCard[] = [
+  {
+    tag: "Announcement",
+    date: "March 14, 2026",
+    title: "BRM awarded state grant for forest stewardship program",
+    excerpt: "The three-year grant funds a partnership with the Willowbrook Watershed Council.",
+  },
+  {
+    tag: "Student work",
+    date: "February 28, 2026",
+    title: "Grade 10 chemistry class publishes water-quality dataset",
+    excerpt: "Eight months of sampling along the Cooper River, openly licensed on Zenodo.",
+  },
+  {
+    tag: "Community",
+    date: "February 12, 2026",
+    title: "Annual spring festival open to the public, May 4",
+    excerpt: "Student performances, studio tours, plant sale, food. Admission is free.",
+  },
+];
+
 function NewsAndCTA({ onInquire, onGallery }: { onInquire: () => void; onGallery: () => void }) {
-  const news = [
-    {
-      tag: "Announcement",
-      date: "March 14, 2026",
-      title: "BRM awarded state grant for forest stewardship program",
-      excerpt: "The three-year grant funds a partnership with the Willowbrook Watershed Council.",
-    },
-    {
-      tag: "Student work",
-      date: "February 28, 2026",
-      title: "Grade 10 chemistry class publishes water-quality dataset",
-      excerpt: "Eight months of sampling along the Cooper River, openly licensed on Zenodo.",
-    },
-    {
-      tag: "Community",
-      date: "February 12, 2026",
-      title: "Annual spring festival open to the public, May 4",
-      excerpt: "Student performances, studio tours, plant sale, food. Admission is free.",
-    },
-  ];
+  const s = useSection("home.news_cta", {
+    headline: "From the school journal",
+    ctaHeadline: "Visit us this spring",
+    ctaBody:
+      "Open houses run every Thursday at 9am from January through April. Or schedule a private tour any weekday.",
+    ctaPrimary: "Inquire now",
+    ctaSecondary: "See the campus",
+    newsJson: JSON.stringify(DEFAULT_NEWS),
+  });
+  const news = parseList<NewsCard>(s.newsJson, DEFAULT_NEWS);
   return (
     <Section seed="home-news-cta" count={2} className="py-24 md:py-32">
       <div className="grid lg:grid-cols-12 gap-10">
         <div className="lg:col-span-8">
           <Reveal as="header" className="mb-8">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-              From the school journal
+              {s.headline}
             </h2>
           </Reveal>
           <ul className="divide-y divide-border">
@@ -873,11 +972,10 @@ function NewsAndCTA({ onInquire, onGallery }: { onInquire: () => void; onGallery
           <Reveal delay={0.1}>
             <div className="sticky top-24 rounded-2xl bg-brand text-brand-foreground p-7">
               <h3 className="text-2xl font-bold tracking-tight mb-3">
-                Visit us this spring
+                {s.ctaHeadline}
               </h3>
               <p className="text-sm opacity-85 mb-6 leading-relaxed">
-                Open houses run every Thursday at 9am from January through
-                April. Or schedule a private tour any weekday.
+                {s.ctaBody}
               </p>
               <div className="space-y-3">
                 <button
@@ -885,7 +983,7 @@ function NewsAndCTA({ onInquire, onGallery }: { onInquire: () => void; onGallery
                   onClick={onInquire}
                   className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-amber text-amber-foreground font-medium hover:bg-amber/90 transition-colors"
                 >
-                  Inquire now
+                  {s.ctaPrimary}
                   <ArrowRight size={16} weight="bold" />
                 </button>
                 <button
@@ -893,7 +991,7 @@ function NewsAndCTA({ onInquire, onGallery }: { onInquire: () => void; onGallery
                   onClick={onGallery}
                   className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full border border-brand-foreground/30 hover:border-amber transition-colors"
                 >
-                  See the campus
+                  {s.ctaSecondary}
                 </button>
               </div>
             </div>

@@ -18,7 +18,9 @@ import {
   SignOut,
 } from "@phosphor-icons/react/dist/ssr";
 import { useSite } from "@/components/site/site-context";
+import { AdminBadge } from "./admin-ui";
 import { isFirebaseConfigured, signInWithGoogle, signOutAdmin } from "@/lib/firebase";
+import { useUnreadCounts } from "@/admin/use-unread-counts";
 import { AdminDashboard } from "@/admin/pages/dashboard";
 import { AdminInquiries } from "@/admin/pages/inquiries";
 import { AdminContacts } from "@/admin/pages/contacts";
@@ -54,10 +56,10 @@ export type AdminPage =
   | "trash"
   | "settings";
 
-const NAV: { page: AdminPage; label: string; Icon: typeof House }[] = [
+const NAV: { page: AdminPage; label: string; Icon: typeof House; countKey?: "inquiries" | "contacts" }[] = [
   { page: "dashboard", label: "Dashboard", Icon: House },
-  { page: "inquiries", label: "Inquiries", Icon: ListChecks },
-  { page: "contacts", label: "Contact messages", Icon: ChatCircleText },
+  { page: "inquiries", label: "Inquiries", Icon: ListChecks, countKey: "inquiries" },
+  { page: "contacts", label: "Contact messages", Icon: ChatCircleText, countKey: "contacts" },
   { page: "content", label: "Content (CMS)", Icon: Article },
   { page: "events", label: "Events", Icon: CalendarBlank },
   { page: "gallery", label: "Gallery", Icon: Images },
@@ -85,6 +87,7 @@ export function AdminShell() {
   });
   const [page, setPage] = useState<AdminPage>("dashboard");
   const firebaseReady = isFirebaseConfigured();
+  const unread = useUnreadCounts(authed);
 
   // One-time cleanup of the legacy persistent flag from older builds.
   useEffect(() => {
@@ -124,8 +127,9 @@ export function AdminShell() {
               Admin
             </p>
             <nav className="space-y-0.5">
-              {NAV.map(({ page: p, label, Icon }) => {
+              {NAV.map(({ page: p, label, Icon, countKey }) => {
                 const active = page === p;
+                const count = countKey ? unread[countKey] : null;
                 return (
                   <button
                     key={p}
@@ -139,6 +143,11 @@ export function AdminShell() {
                   >
                     <Icon size={16} weight={active ? "fill" : "regular"} />
                     <span>{label}</span>
+                    {count != null && count > 0 && (
+                      <span className="ml-auto" aria-label={`${count} unread`}>
+                        <AdminBadge color="amber">{count}</AdminBadge>
+                      </span>
+                    )}
                   </button>
                 );
               })}

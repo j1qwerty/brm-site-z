@@ -8,6 +8,8 @@ import { Reveal } from "@/components/site/motion-primitives";
 import { useToast } from "@/hooks/use-toast";
 import { isFirebaseConfigured, getDb } from "@/lib/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { useSection } from "@/lib/cms-context";
+import { parseList } from "@/lib/cms-list";
 
 /*
   CONTACT VIEW - 4 sections
@@ -42,6 +44,12 @@ export function ContactView() {
 
 function ContactHero() {
   const reduce = useReducedMotion();
+  const s = useSection("contact.hero", {
+    eyebrow: "Contact",
+    headline: "Talk to a real person.",
+    subtext:
+      "We answer every message. Usually within one business day, always from a person whose name and title are in the signature.",
+  });
   return (
     <Section seed="contact-hero" count={3} className="py-20 md:py-32 min-h-[68dvh] flex items-center">
       <div className="max-w-4xl">
@@ -51,7 +59,7 @@ function ContactHero() {
           transition={{ duration: 0.6 }}
           className="text-xs uppercase tracking-[0.2em] font-mono text-amber mb-6"
         >
-          Contact
+          {s.eyebrow}
         </motion.p>
         <motion.h1
           initial={reduce ? false : { opacity: 0, y: 18 }}
@@ -59,7 +67,7 @@ function ContactHero() {
           transition={{ duration: 0.7, delay: 0.05 }}
           className="text-balance text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.02]"
         >
-          Talk to a real person.
+          {s.headline}
         </motion.h1>
         <motion.p
           initial={reduce ? false : { opacity: 0, y: 12 }}
@@ -67,8 +75,7 @@ function ContactHero() {
           transition={{ duration: 0.7, delay: 0.12 }}
           className="mt-6 text-base text-muted-foreground max-w-[60ch] leading-relaxed"
         >
-          We answer every message. Usually within one business day, always
-          from a person whose name and title are in the signature.
+          {s.subtext}
         </motion.p>
       </div>
     </Section>
@@ -283,36 +290,48 @@ function ContactFormSection() {
 }
 
 function VisitInfo() {
+  const s = useSection("contact.visit", {
+    headline: "Visit",
+    body: "Open houses run every Thursday at 9am from January through April. Private tours are available any weekday morning, year-round.",
+    addressLine1: "242 Linden Ridge Road",
+    addressLine2: "Willowbrook, OR 97XXX",
+    phone: "(503) 555-0140",
+    email: "hello@brm-international.org",
+    hours: "Monday to Friday, 7:45am to 4:15pm",
+    mapImage: "https://picsum.photos/seed/brm-campus-map-aerial/800/600",
+    mapImageAlt: "Aerial map view of the BRM International School campus",
+    entranceLabel: "Main entrance",
+    entranceBody: "Linden Ridge Road gate, follow the signs to Founders Hall.",
+  });
   return (
     <Section seed="contact-visit" count={2} className="py-24 md:py-32 bg-muted/30">
       <div className="grid lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-5">
           <Reveal as="header">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Visit</h2>
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">{s.headline}</h2>
             <p className="text-base text-muted-foreground max-w-prose leading-relaxed mb-6">
-              Open houses run every Thursday at 9am from January through
-              April. Private tours are available any weekday morning, year-round.
+              {s.body}
             </p>
             <div className="space-y-4 text-sm">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.14em] text-amber mb-1">Address</p>
-                <p className="text-foreground">242 Linden Ridge Road<br />Willowbrook, OR 97XXX</p>
+                <p className="text-foreground">{s.addressLine1}<br />{s.addressLine2}</p>
               </div>
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.14em] text-amber mb-1">Front office</p>
                 <p className="text-foreground">
-                  <a href="tel:+15035550140" className="hover:text-amber underline-offset-4 hover:underline">(503) 555-0140</a>
+                  <a href="tel:+15035550140" className="hover:text-amber underline-offset-4 hover:underline">{s.phone}</a>
                 </p>
               </div>
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.14em] text-amber mb-1">Email</p>
                 <p className="text-foreground">
-                  <a href="mailto:hello@brm-international.org" className="hover:text-amber underline-offset-4 hover:underline">hello@brm-international.org</a>
+                  <a href={`mailto:${s.email}`} className="hover:text-amber underline-offset-4 hover:underline">{s.email}</a>
                 </p>
               </div>
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.14em] text-amber mb-1">Hours</p>
-                <p className="text-foreground">Monday to Friday, 7:45am to 4:15pm</p>
+                <p className="text-foreground">{s.hours}</p>
               </div>
             </div>
           </Reveal>
@@ -321,14 +340,14 @@ function VisitInfo() {
           <Reveal delay={0.05}>
             <div className="rounded-2xl overflow-hidden border border-border aspect-[4/3] bg-muted relative">
               <img
-                src="https://picsum.photos/seed/brm-campus-map-aerial/800/600"
-                alt="Aerial map view of the BRM International School campus"
+                src={s.mapImage}
+                alt={s.mapImageAlt}
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
               <div className="absolute bottom-4 left-4 right-4 rounded-xl bg-background/90 backdrop-blur-md border border-border p-4">
-                <p className="text-xs font-mono uppercase tracking-[0.14em] text-muted-foreground mb-1">Main entrance</p>
-                <p className="text-sm font-medium">Linden Ridge Road gate, follow the signs to Founders Hall.</p>
+                <p className="text-xs font-mono uppercase tracking-[0.14em] text-muted-foreground mb-1">{s.entranceLabel}</p>
+                <p className="text-sm font-medium">{s.entranceBody}</p>
               </div>
             </div>
           </Reveal>
@@ -338,22 +357,30 @@ function VisitInfo() {
   );
 }
 
+type DeptContact = { name: string; person: string; email: string; role: string };
+
+const DEFAULT_DEPTS: DeptContact[] = [
+  { name: "Admissions Office", person: "Greta Linde", email: "admissions@brm-international.org", role: "All inquiries, tours, applications" },
+  { name: "Financial Aid", person: "Sofia Park", email: "aid@brm-international.org", role: "SSS, awards, payment plans" },
+  { name: "Lower School", person: "Adaeze Okwu", email: "lower@brm-international.org", role: "Grades K through 5" },
+  { name: "Middle School", person: "Hugo Tanaka", email: "middle@brm-international.org", role: "Grades 6 through 8" },
+  { name: "High School", person: "Ben Carter", email: "upper@brm-international.org", role: "Grades 9 through 10" },
+  { name: "Front Office", person: "Jules Yamada", email: "front@brm-international.org", role: "Anything else" },
+];
+
 function DepartmentContacts() {
-  const contacts = [
-    { name: "Admissions Office", person: "Greta Linde", email: "admissions@brm-international.org", role: "All inquiries, tours, applications" },
-    { name: "Financial Aid", person: "Sofia Park", email: "aid@brm-international.org", role: "SSS, awards, payment plans" },
-    { name: "Lower School", person: "Adaeze Okwu", email: "lower@brm-international.org", role: "Grades K through 5" },
-    { name: "Middle School", person: "Hugo Tanaka", email: "middle@brm-international.org", role: "Grades 6 through 8" },
-    { name: "High School", person: "Ben Carter", email: "upper@brm-international.org", role: "Grades 9 through 10" },
-    { name: "Front Office", person: "Jules Yamada", email: "front@brm-international.org", role: "Anything else" },
-  ];
+  const s = useSection("contact.depts", {
+    headline: "Who to ask",
+    intro: "Direct email for the most common questions. Each is monitored by a person whose title is in their signature.",
+    contactsJson: JSON.stringify(DEFAULT_DEPTS),
+  });
+  const contacts = parseList<DeptContact>(s.contactsJson, DEFAULT_DEPTS);
   return (
     <Section seed="contact-depts" count={2} className="py-24 md:py-32">
       <Reveal as="header" className="mb-10 max-w-2xl">
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Who to ask</h2>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">{s.headline}</h2>
         <p className="text-base text-muted-foreground">
-          Direct email for the most common questions. Each is monitored by a
-          person whose title is in their signature.
+          {s.intro}
         </p>
       </Reveal>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

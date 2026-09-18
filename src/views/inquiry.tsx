@@ -8,6 +8,8 @@ import { Reveal } from "@/components/site/motion-primitives";
 import { useToast } from "@/hooks/use-toast";
 import { isFirebaseConfigured, getDb } from "@/lib/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { useSection } from "@/lib/cms-context";
+import { parseList } from "@/lib/cms-list";
 
 /*
   INQUIRY VIEW - 4 sections
@@ -73,6 +75,12 @@ export function InquiryView() {
 
 function InquiryHero() {
   const reduce = useReducedMotion();
+  const s = useSection("inquiry.hero", {
+    eyebrow: "Inquiry form",
+    headline: "Tell us about your student.",
+    subtext:
+      "Takes about three minutes. We will reply within one business day from a real person in the admissions office, not a queue.",
+  });
   return (
     <Section seed="inquiry-hero" count={3} className="py-20 md:py-32 min-h-[68dvh] flex items-center">
       <div className="max-w-4xl">
@@ -82,7 +90,7 @@ function InquiryHero() {
           transition={{ duration: 0.6 }}
           className="text-xs uppercase tracking-[0.2em] font-mono text-amber mb-6"
         >
-          Inquiry form
+          {s.eyebrow}
         </motion.p>
         <motion.h1
           initial={reduce ? false : { opacity: 0, y: 18 }}
@@ -90,7 +98,7 @@ function InquiryHero() {
           transition={{ duration: 0.7, delay: 0.05 }}
           className="text-balance text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.02]"
         >
-          Tell us about your student.
+          {s.headline}
         </motion.h1>
         <motion.p
           initial={reduce ? false : { opacity: 0, y: 12 }}
@@ -98,8 +106,7 @@ function InquiryHero() {
           transition={{ duration: 0.7, delay: 0.12 }}
           className="mt-6 text-base text-muted-foreground max-w-[60ch] leading-relaxed"
         >
-          Takes about three minutes. We will reply within one business day
-          from a real person in the admissions office, not a queue.
+          {s.subtext}
         </motion.p>
       </div>
     </Section>
@@ -441,32 +448,41 @@ function InquiryFormSection() {
   );
 }
 
+type NextStep = { n: string; title: string; body: string };
+
+const DEFAULT_STEPS: NextStep[] = [
+  { n: "1", title: "We reply within one business day", body: "A real person in the admissions office will email you, usually with the viewbook attached and a calendar link for a tour." },
+  { n: "2", title: "You come visit", body: "Open house every Thursday at 9am from January through April, or a private tour any weekday morning. Your student is welcome at both." },
+  { n: "3", title: "We meet your student", body: "Half-day visit in their current grade, paired with a student host. The most important part of the process for us." },
+  { n: "4", title: "Decision, March 10", body: "Admission decisions released March 10. Aid decisions released March 17. We will tell you where you are on the waitlist, honestly." },
+];
+
 function NextSteps() {
-  const steps = [
-    { n: "1", title: "We reply within one business day", body: "A real person in the admissions office will email you, usually with the viewbook attached and a calendar link for a tour." },
-    { n: "2", title: "You come visit", body: "Open house every Thursday at 9am from January through April, or a private tour any weekday morning. Your student is welcome at both." },
-    { n: "3", title: "We meet your student", body: "Half-day visit in their current grade, paired with a student host. The most important part of the process for us." },
-    { n: "4", title: "Decision, March 10", body: "Admission decisions released March 10. Aid decisions released March 17. We will tell you where you are on the waitlist, honestly." },
-  ];
+  const s = useSection("inquiry.next_steps", {
+    headline: "What happens next",
+    intro: "From the moment you hit submit to the day you get a decision.",
+    stepsJson: JSON.stringify(DEFAULT_STEPS),
+  });
+  const steps = parseList<NextStep>(s.stepsJson, DEFAULT_STEPS);
   return (
     <Section seed="inquiry-next" count={2} className="py-24 md:py-32 bg-muted/30">
       <Reveal as="header" className="mb-12 max-w-2xl">
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">What happens next</h2>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">{s.headline}</h2>
         <p className="text-base text-muted-foreground">
-          From the moment you hit submit to the day you get a decision.
+          {s.intro}
         </p>
       </Reveal>
       <ol className="space-y-6">
-        {steps.map((s, i) => (
-          <Reveal as="li" key={s.n} delay={i * 0.04}>
+        {steps.map((st, i) => (
+          <Reveal as="li" key={st.n} delay={i * 0.04}>
             <div className="grid grid-cols-[3rem_1fr] gap-5 items-baseline">
-              <p className="text-3xl font-bold tracking-tighter text-amber">{s.n}</p>
+              <p className="text-3xl font-bold tracking-tighter text-amber">{st.n}</p>
               <div>
                 <h3 className="text-lg md:text-xl font-bold tracking-tight mb-1">
-                  {s.title}
+                  {st.title}
                 </h3>
                 <p className="text-base text-muted-foreground max-w-prose leading-relaxed">
-                  {s.body}
+                  {st.body}
                 </p>
               </div>
             </div>
@@ -477,25 +493,33 @@ function NextSteps() {
   );
 }
 
+type QuickFaq = { q: string; a: string };
+
+const DEFAULT_FAQS: QuickFaq[] = [
+  {
+    q: "What if I miss the January 15 deadline?",
+    a: "Late applications go on the waitlist. We keep the list active through the summer. Email admissions if you are unsure.",
+  },
+  {
+    q: "Do you offer shadow days?",
+    a: "Yes. Every applicant gets a half-day visit in their current grade, paired with a student host. We schedule it after the application is complete.",
+  },
+  {
+    q: "Is financial aid a separate process?",
+    a: "Yes, through SSS (School and Student Services). It opens in October. Aid decisions are made independently of admission.",
+  },
+];
+
 function QuickFAQ() {
-  const faqs = [
-    {
-      q: "What if I miss the January 15 deadline?",
-      a: "Late applications go on the waitlist. We keep the list active through the summer. Email admissions if you are unsure.",
-    },
-    {
-      q: "Do you offer shadow days?",
-      a: "Yes. Every applicant gets a half-day visit in their current grade, paired with a student host. We schedule it after the application is complete.",
-    },
-    {
-      q: "Is financial aid a separate process?",
-      a: "Yes, through SSS (School and Student Services). It opens in October. Aid decisions are made independently of admission.",
-    },
-  ];
+  const s = useSection("inquiry.faq", {
+    headline: "Quick questions",
+    faqsJson: JSON.stringify(DEFAULT_FAQS),
+  });
+  const faqs = parseList<QuickFaq>(s.faqsJson, DEFAULT_FAQS);
   return (
     <Section seed="inquiry-faq" count={2} className="py-24 md:py-32">
       <Reveal as="header" className="mb-10 max-w-2xl">
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Quick questions</h2>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">{s.headline}</h2>
       </Reveal>
       <div className="grid md:grid-cols-3 gap-4">
         {faqs.map((f, i) => (
