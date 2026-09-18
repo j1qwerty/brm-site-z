@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash, PencilSimple, X, FloppyDisk } from "@phosphor-icons/react/dist/ssr";
 import { AdminHeader, AdminCard, AdminLoading, AdminEmptyState, AdminButton, AdminInput, AdminTextarea, AdminLabel, AdminField, AdminBadge } from "../admin-ui";
+import { HistoryPanel } from "../history-panel";
 import { addItem, updateItem, softDeleteItem, isFirebaseConfigured } from "@/lib/cms";
 import { useCMS } from "@/lib/cms-context";
 import type { EventItem } from "@/lib/cms-types";
@@ -154,6 +155,7 @@ export function AdminEvents() {
           ))}
         </ul>
       )}
+      <HistoryPanel collection="cms_items" kind="event" title="Event changes" />
     </div>
   );
 }

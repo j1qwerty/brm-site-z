@@ -201,7 +201,7 @@ export function AdminShell() {
           )}
         </aside>
 
-        <div className="min-h-[60vh]">
+        <div className="min-h-[60vh] min-w-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={page}

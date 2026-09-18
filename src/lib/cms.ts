@@ -165,6 +165,7 @@ export async function addItem<T extends Record<string, unknown>>(
   await recordHistory({
     collection: "cms_items",
     docId: ref.id,
+    kind,
     action: "add",
     after: { kind, data },
     summary: summary ?? `Added ${kind} item`,
@@ -182,6 +183,7 @@ export async function updateItem<T extends Record<string, unknown>>(
   const ref = doc(db, "cms_items", itemId);
   const snap = await getDoc(ref);
   const before = snap.exists() ? snap.data()?.data : null;
+  const kind = snap.exists() ? (snap.data() as any)?.kind : undefined;
   await updateDoc(ref, {
     data: { ...(snap.data()?.data ?? {}), ...data },
     updatedAt: serverTimestamp(),
@@ -189,6 +191,7 @@ export async function updateItem<T extends Record<string, unknown>>(
   await recordHistory({
     collection: "cms_items",
     docId: itemId,
+    ...(kind ? { kind } : {}),
     action: "edit",
     before,
     after: { ...(snap.data()?.data ?? {}), ...data },
@@ -202,6 +205,7 @@ export async function softDeleteItem(itemId: string, summary?: string): Promise<
   const ref = doc(db, "cms_items", itemId);
   const snap = await getDoc(ref);
   const before = snap.exists() ? snap.data() : null;
+  const kind = snap.exists() ? (snap.data() as any)?.kind : undefined;
   await updateDoc(ref, {
     deleted: true,
     deletedAt: serverTimestamp(),
@@ -210,6 +214,7 @@ export async function softDeleteItem(itemId: string, summary?: string): Promise<
   await recordHistory({
     collection: "cms_items",
     docId: itemId,
+    ...(kind ? { kind } : {}),
     action: "delete",
     before,
     after: { deleted: true },
@@ -221,6 +226,8 @@ export async function restoreItem(itemId: string, summary?: string): Promise<voi
   const db = getDb();
   if (!db) throw new Error("Firebase not configured");
   const ref = doc(db, "cms_items", itemId);
+  const snap = await getDoc(ref);
+  const kind = snap.exists() ? (snap.data() as any)?.kind : undefined;
   await updateDoc(ref, {
     deleted: false,
     deletedAt: null,
@@ -229,6 +236,7 @@ export async function restoreItem(itemId: string, summary?: string): Promise<voi
   await recordHistory({
     collection: "cms_items",
     docId: itemId,
+    ...(kind ? { kind } : {}),
     action: "restore",
     after: { deleted: false },
     summary: summary ?? `Restored item ${itemId}`,
@@ -238,10 +246,13 @@ export async function restoreItem(itemId: string, summary?: string): Promise<voi
 export async function permanentlyDeleteItem(itemId: string): Promise<void> {
   const db = getDb();
   if (!db) throw new Error("Firebase not configured");
+  const snap = await getDoc(doc(db, "cms_items", itemId));
+  const kind = snap.exists() ? (snap.data() as any)?.kind : undefined;
   await deleteDoc(doc(db, "cms_items", itemId));
   await recordHistory({
     collection: "cms_items",
     docId: itemId,
+    ...(kind ? { kind } : {}),
     action: "delete",
     after: null,
     summary: `Permanently deleted item ${itemId}`,
@@ -302,42 +313,33 @@ export async function recordHistory(entry: Omit<CMSHistoryEntry, "id" | "timesta
 export async function loadHistory(collectionName: string, docId?: string): Promise<CMSHistoryEntry[]> {
   const db = getDb();
   if (!db) return [];
-  let q;
-  if (docId) {
-    q = query(
-      collection(db, "cms_history"),
-      where("collection", "==", collectionName),
-      where("docId", "==", docId),
-      orderBy("timestamp", "desc"),
-      limit(10)
-    );
-  } else {
-    q = query(
-      collection(db, "cms_history"),
-      where("collection", "==", collectionName),
-      orderBy("timestamp", "desc"),
-      limit(50)
-    );
-  }
-  const snap = await getDocs(q);
+  // NOTE: no orderBy/limit server-side. Those need composite indexes (slow to
+  // build, fail while building). Equality filters need none - sort + slice here.
+  const filters: any[] =
+    docId
+      ? [where("collection", "==", collectionName), where("docId", "==", docId)]
+      : [where("collection", "==", collectionName)];
+  const snap = await getDocs(query(collection(db, "cms_history"), ...filters));
   const entries: CMSHistoryEntry[] = [];
   snap.forEach((d) => entries.push({ id: d.id, ...(d.data() as Omit<CMSHistoryEntry, "id">) }));
-  return entries;
+  entries.sort((a, b) => (b.timestamp?.toMillis?.() ?? 0) - (a.timestamp?.toMillis?.() ?? 0));
+  return entries.slice(0, docId ? 10 : 50);
 }
 
 async function trimHistory(collectionName: string, docId: string): Promise<void> {
   const db = getDb();
   if (!db) return;
-  const q = query(
-    collection(db, "cms_history"),
-    where("collection", "==", collectionName),
-    where("docId", "==", docId),
-    orderBy("timestamp", "desc"),
-    limit(11) // grab 11, delete from index 10 onward
+  const snap = await getDocs(
+    query(
+      collection(db, "cms_history"),
+      where("collection", "==", collectionName),
+      where("docId", "==", docId)
+    )
   );
-  const snap = await getDocs(q);
   if (snap.size <= 10) return;
-  const docs = snap.docs;
+  const docs = snap.docs
+    .map((d) => ({ ref: d.ref, t: (d.data() as any)?.timestamp?.toMillis?.() ?? 0 }))
+    .sort((a, b) => b.t - a.t);
   const batch = writeBatch(db);
   docs.slice(10).forEach((d) => batch.delete(d.ref));
   await batch.commit();

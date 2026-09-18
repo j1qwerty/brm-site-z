@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash, PencilSimple, X, FloppyDisk } from "@phosphor-icons/react/dist/ssr";
 import { AdminHeader, AdminCard, AdminEmptyState, AdminButton, AdminInput, AdminTextarea, AdminField } from "../admin-ui";
+import { HistoryPanel } from "../history-panel";
 import { addItem, updateItem, softDeleteItem, isFirebaseConfigured } from "@/lib/cms";
 import { useCMS } from "@/lib/cms-context";
 import type { FAQItem } from "@/lib/cms-types";
@@ -127,6 +128,7 @@ export function AdminFAQs() {
           ))}
         </div>
       )}
+      <HistoryPanel collection="cms_items" kind="faq" title="FAQ changes" />
     </div>
   );
 }

@@ -168,6 +168,7 @@ export type CMSHistoryEntry = {
   collection: string;
   docId: string;
   sectionId?: string;
+  kind?: string; // cms_items item kind (gallery, video, event, faq, news)
   action: "edit" | "add" | "delete" | "restore" | "publish" | "settings";
   before?: unknown;
   after?: unknown;

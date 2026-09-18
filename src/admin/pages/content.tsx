@@ -13,6 +13,7 @@ import {
   AdminLabel,
   AdminField,
 } from "../admin-ui";
+import { HistoryPanel } from "../history-panel";
 import { loadSectionForEditor, saveSectionDraft, publishSection, revertDraft, isFirebaseConfigured } from "@/lib/cms";
 import { SECTIONS, getDefaultsFor } from "@/lib/cms-defaults";
 import type { SectionId } from "@/lib/cms-types";
@@ -161,7 +162,7 @@ export function AdminContent() {
         })}
       </div>
       <div className="grid lg:grid-cols-[15rem_1fr] gap-4">
-        <aside className="rounded-2xl border border-border bg-card p-3 max-h-[70vh] overflow-y-auto">
+        <aside className="rounded-2xl border border-border bg-card p-3 max-h-[70vh] overflow-y-auto min-w-0">
           <p className="px-2 py-1 text-xs uppercase tracking-[0.12em] font-mono text-muted-foreground">
             {activeGroup.page} sections
           </p>
@@ -182,7 +183,7 @@ export function AdminContent() {
           </ul>
         </aside>
 
-        <div>
+        <div className="min-w-0">
           {!selected ? (
             <AdminEmptyState
               title="Pick a section to edit"
@@ -253,12 +254,15 @@ export function AdminContent() {
                   <p className="text-xs uppercase tracking-[0.14em] font-mono text-muted-foreground mb-2">
                     Currently live on site
                   </p>
-                  <pre className="text-xs bg-muted rounded-md p-3 overflow-x-auto max-h-40">
+                  <pre className="text-xs bg-muted rounded-md p-3 overflow-x-auto overflow-y-auto max-h-40 max-w-full">
                     {JSON.stringify(liveValues, null, 2)}
                   </pre>
                 </div>
               )}
             </AdminCard>
+          )}
+          {selected && (
+            <HistoryPanel collection="cms_content" docId={selected} title="Section history" />
           )}
         </div>
       </div>

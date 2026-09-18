@@ -27,6 +27,7 @@ export function historyPageOf(h: CMSHistoryEntry): string {
     return prefix.charAt(0).toUpperCase() + prefix.slice(1);
   }
   if (h.collection === "cms_items") {
+    if (h.kind && ITEM_KIND_PAGES[h.kind]) return ITEM_KIND_PAGES[h.kind];
     const snap = (h.after ?? h.before ?? {}) as {
       kind?: string;
       data?: { page?: unknown };
@@ -77,7 +78,7 @@ export function AdminHistory() {
         setLoadError(
           e?.code === "permission-denied"
             ? "Firestore denied access. Sign in with Google (password login has no database access), then reopen this page."
-            : "Could not load history from Firestore. New composite indexes may still be building - retry in a few minutes.",
+            : `Could not load history from Firestore (${e?.code ?? "unknown error"}). ${e?.message ?? "Retry in a bit."}`,
         );
       });
     return () => { cancelled = true; };
