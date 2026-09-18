@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   House,
@@ -15,9 +15,10 @@ import {
   Gear,
   ArrowLeft,
   GoogleLogo,
+  SignOut,
 } from "@phosphor-icons/react/dist/ssr";
 import { useSite } from "@/components/site/site-context";
-import { isFirebaseConfigured, signInWithGoogle } from "@/lib/firebase";
+import { isFirebaseConfigured, signInWithGoogle, signOutAdmin } from "@/lib/firebase";
 import { AdminDashboard } from "@/admin/pages/dashboard";
 import { AdminInquiries } from "@/admin/pages/inquiries";
 import { AdminContacts } from "@/admin/pages/contacts";
@@ -33,9 +34,9 @@ import { AdminSettings } from "@/admin/pages/settings";
 /*
   Admin Shell
   ===========
-  - Gated by a simple password stored in localStorage (admin password is set
-    via VITE_ADMIN_PASSWORD env var, or 'brm-admin' default), or by Google
-    sign-in via Firebase Auth.
+  - Gated by password (VITE_ADMIN_PASSWORD env var, or 'brm-admin' default)
+    or by Google sign-in via Firebase Auth. Auth state is in-memory only:
+    every visit to the admin view starts logged out.
   - Sidebar nav + content area.
   - All admin pages live in src/admin/pages/*.
 */
@@ -73,22 +74,27 @@ const ADMIN_PW =
 
 export function AdminShell() {
   const { setView } = useSite();
-  const [authed, setAuthed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem("brm-admin-session") === "ok";
-  });
+  // In-memory only: every visit to #/admin starts logged out and must log in.
+  // Nothing is persisted, so reloading or reopening the browser always
+  // lands on the login screen.
+  const [authed, setAuthed] = useState<boolean>(false);
   const [page, setPage] = useState<AdminPage>("dashboard");
   const firebaseReady = isFirebaseConfigured();
 
-  // Sync auth state back to localStorage on changes (no synchronous setState in effect).
+  // One-time cleanup of the legacy persistent flag from older builds.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (authed) {
-      window.localStorage.setItem("brm-admin-session", "ok");
-    } else {
-      window.localStorage.removeItem("brm-admin-session");
+    window.localStorage.removeItem("brm-admin-session");
+  }, []);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await signOutAdmin();
+    } finally {
+      setAuthed(false);
+      setPage("dashboard");
     }
-  }, [authed]);
+  }, []);
 
   if (!authed) {
     return <AdminLogin onAuthed={() => setAuthed(true)} />;
@@ -130,6 +136,14 @@ export function AdminShell() {
               >
                 <ArrowLeft size={16} />
                 <span>Back to site</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <SignOut size={16} />
+                <span>Log out</span>
               </button>
             </div>
           </div>
@@ -179,9 +193,6 @@ function AdminLogin({ onAuthed }: { onAuthed: () => void }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (pw === ADMIN_PW) {
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("brm-admin-session", "ok");
-      }
       onAuthed();
     } else {
       setErr("Wrong password. Try again.");
@@ -197,9 +208,6 @@ function AdminLogin({ onAuthed }: { onAuthed: () => void }) {
     setGoogleBusy(true);
     try {
       await signInWithGoogle();
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("brm-admin-session", "ok");
-      }
       onAuthed();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Google sign-in failed.");
