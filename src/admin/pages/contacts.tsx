@@ -26,13 +26,22 @@ type Contact = {
 export function AdminContacts() {
   const [items, setItems] = useState<Contact[] | null>(() => (isFirebaseConfigured() ? null : []));
   const [selected, setSelected] = useState<Contact | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isFirebaseConfigured()) return;
     let cancelled = false;
     loadContactMessages<Contact>()
       .then((data) => { if (!cancelled) setItems(data); })
-      .catch(() => { if (!cancelled) setItems([]); });
+      .catch((e) => {
+        if (cancelled) return;
+        setItems([]);
+        setLoadError(
+          e?.code === "permission-denied"
+            ? "Firestore denied access. Sign in with Google (password login has no database access), then reopen this page."
+            : "Could not load messages from Firestore.",
+        );
+      });
     return () => { cancelled = true; };
   }, []);
 
@@ -41,6 +50,11 @@ export function AdminContacts() {
   return (
     <div>
       <AdminHeader title="Contact messages" subtitle={`${items.length} received from the contact form.`} />
+      {loadError && (
+        <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm">
+          {loadError}
+        </div>
+      )}
       {items.length === 0 ? (
         <AdminEmptyState
           title="No messages yet"

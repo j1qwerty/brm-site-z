@@ -35,8 +35,8 @@ import { AdminSettings } from "@/admin/pages/settings";
   Admin Shell
   ===========
   - Gated by password (VITE_ADMIN_PASSWORD env var, or 'brm-admin' default)
-    or by Google sign-in via Firebase Auth. Auth state is in-memory only:
-    every visit to the admin view starts logged out.
+    or by Google sign-in via Firebase Auth. The session survives page refresh
+    within the same tab; a new tab or browser restart starts logged out.
   - Sidebar nav + content area.
   - All admin pages live in src/admin/pages/*.
 */
@@ -72,12 +72,17 @@ const ADMIN_PW =
   (import.meta.env as Record<string, string | undefined>).VITE_ADMIN_PASSWORD ||
   "brm-admin";
 
+// Tab-scoped session flag: survives page refresh, cleared when the tab closes.
+// A brand-new tab (or browser restart) always starts logged out.
+const SESSION_KEY = "brm-admin-authed";
+
 export function AdminShell() {
   const { setView } = useSite();
-  // In-memory only: every visit to #/admin starts logged out and must log in.
-  // Nothing is persisted, so reloading or reopening the browser always
-  // lands on the login screen.
-  const [authed, setAuthed] = useState<boolean>(false);
+  // Restored from the tab session (survives refresh). A new tab starts logged out.
+  const [authed, setAuthed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem(SESSION_KEY) === "1";
+  });
   const [page, setPage] = useState<AdminPage>("dashboard");
   const firebaseReady = isFirebaseConfigured();
 
@@ -87,7 +92,17 @@ export function AdminShell() {
     window.localStorage.removeItem("brm-admin-session");
   }, []);
 
+  const handleAuthed = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(SESSION_KEY, "1");
+    }
+    setAuthed(true);
+  }, []);
+
   const handleLogout = useCallback(async () => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(SESSION_KEY);
+    }
     try {
       await signOutAdmin();
     } finally {
@@ -97,7 +112,7 @@ export function AdminShell() {
   }, []);
 
   if (!authed) {
-    return <AdminLogin onAuthed={() => setAuthed(true)} />;
+    return <AdminLogin onAuthed={handleAuthed} />;
   }
 
   return (

@@ -160,6 +160,8 @@ function InquiryFormSection() {
         interests: form.interests,
         howHeard: form.howHeard.trim(),
         message: form.message.trim(),
+        read: false,
+        deleted: false,
         createdAt: serverTimestamp(),
       });
       setStatus("success");

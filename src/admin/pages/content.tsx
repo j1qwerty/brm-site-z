@@ -30,6 +30,7 @@ import type { SectionId } from "@/lib/cms-types";
 */
 
 export function AdminContent() {
+  const [activePage, setActivePage] = useState<string>(SECTIONS[0].page);
   const [selected, setSelected] = useState<SectionId | null>(null);
   const [liveValues, setLiveValues] = useState<Record<string, unknown> | null>(null);
   const [draftValues, setDraftValues] = useState<Record<string, unknown> | null>(null);
@@ -117,6 +118,14 @@ export function AdminContent() {
   };
 
   const firebaseReady = isFirebaseConfigured();
+  const activeGroup = SECTIONS.find((g) => g.page === activePage) ?? SECTIONS[0];
+
+  const handlePageSwitch = (page: string) => {
+    setActivePage(page);
+    setSelected(null);
+    setStatus("idle");
+    setErrorMsg(null);
+  };
 
   return (
     <div>
@@ -130,37 +139,54 @@ export function AdminContent() {
           but you cannot save or publish. Add keys to <code className="font-mono bg-muted px-1 py-0.5 rounded">.env.local</code> first.
         </div>
       )}
+      <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Site pages">
+        {SECTIONS.map((group) => {
+          const active = group.page === activePage;
+          return (
+            <button
+              key={group.page}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => handlePageSwitch(group.page)}
+              className={`shrink-0 px-3.5 py-2 rounded-full text-sm font-medium transition-colors ${
+                active
+                  ? "bg-brand text-brand-foreground"
+                  : "border border-border bg-card text-foreground hover:bg-muted"
+              }`}
+            >
+              {group.page}
+            </button>
+          );
+        })}
+      </div>
       <div className="grid lg:grid-cols-[15rem_1fr] gap-4">
         <aside className="rounded-2xl border border-border bg-card p-3 max-h-[70vh] overflow-y-auto">
-          {SECTIONS.map((group) => (
-            <div key={group.page} className="mb-4">
-              <p className="px-2 py-1 text-xs uppercase tracking-[0.12em] font-mono text-muted-foreground">
-                {group.page}
-              </p>
-              <ul className="space-y-0.5">
-                {group.sections.map((sec) => (
-                  <li key={sec.id}>
-                    <button
-                      type="button"
-                      onClick={() => setSelected(sec.id)}
-                      className={`w-full text-left px-2 py-1.5 rounded-md text-sm transition-colors ${
-                        selected === sec.id ? "bg-brand text-brand-foreground" : "hover:bg-muted"
-                      }`}
-                    >
-                      {sec.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <p className="px-2 py-1 text-xs uppercase tracking-[0.12em] font-mono text-muted-foreground">
+            {activeGroup.page} sections
+          </p>
+          <ul className="space-y-0.5">
+            {activeGroup.sections.map((sec) => (
+              <li key={sec.id}>
+                <button
+                  type="button"
+                  onClick={() => setSelected(sec.id)}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-sm transition-colors ${
+                    selected === sec.id ? "bg-brand text-brand-foreground" : "hover:bg-muted"
+                  }`}
+                >
+                  {sec.label}
+                </button>
+              </li>
+            ))}
+          </ul>
         </aside>
 
         <div>
           {!selected ? (
             <AdminEmptyState
               title="Pick a section to edit"
-              body="Sections are grouped by page. Shared sections (footer, contact info, nav) appear once and apply across all pages where they are used."
+              body="Pick a page tab above, then a section. Shared sections (footer, contact info, nav) appear once and apply across all pages where they are used."
             />
           ) : loading ? (
             <AdminLoading label="Loading section..." />

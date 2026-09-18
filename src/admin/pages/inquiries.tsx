@@ -32,13 +32,22 @@ type Inquiry = {
 export function AdminInquiries() {
   const [items, setItems] = useState<Inquiry[] | null>(() => (isFirebaseConfigured() ? null : []));
   const [selected, setSelected] = useState<Inquiry | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isFirebaseConfigured()) return; // lazy init already set []
     let cancelled = false;
     loadInquiries<Inquiry>()
       .then((data) => { if (!cancelled) setItems(data); })
-      .catch(() => { if (!cancelled) setItems([]); });
+      .catch((e) => {
+        if (cancelled) return;
+        setItems([]);
+        setLoadError(
+          e?.code === "permission-denied"
+            ? "Firestore denied access. Sign in with Google (password login has no database access), then reopen this page."
+            : "Could not load inquiries from Firestore.",
+        );
+      });
     return () => { cancelled = true; };
   }, []);
 
@@ -47,6 +56,11 @@ export function AdminInquiries() {
   return (
     <div>
       <AdminHeader title="Inquiries" subtitle={`${items.length} received from the inquiry form.`} />
+      {loadError && (
+        <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm">
+          {loadError}
+        </div>
+      )}
       {items.length === 0 ? (
         <AdminEmptyState
           title="No inquiries yet"

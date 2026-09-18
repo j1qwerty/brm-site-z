@@ -117,6 +117,8 @@ function ContactFormSection() {
         email: form.email.trim(),
         subject: form.subject.trim(),
         message: form.message.trim(),
+        read: false,
+        deleted: false,
         createdAt: serverTimestamp(),
       });
       setStatus("success");

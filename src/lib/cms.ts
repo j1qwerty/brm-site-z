@@ -357,11 +357,13 @@ export async function loadDeletedItems(): Promise<{ id: string; kind: ItemKind; 
 export async function loadContactMessages(): Promise<{ id: string; name: string; email: string; subject: string; message: string; createdAt: Timestamp | null; read: boolean; deleted?: boolean }[]> {
   const db = getDb();
   if (!db) return [];
-  const q = query(collection(db, "contact_messages"), where("deleted", "!=", true));
-  const snap = await getDocs(q);
+  // No server-side deleted filter: `!=` queries silently drop documents where
+  // the field is missing (older + hand-created docs), so filter client-side.
+  const snap = await getDocs(collection(db, "contact_messages"));
   const items: { id: string; name: string; email: string; subject: string; message: string; createdAt: Timestamp | null; read: boolean; deleted?: boolean }[] = [];
   snap.forEach((d) => {
     const data = d.data() as any;
+    if (data.deleted === true) return;
     items.push({ id: d.id, ...data });
   });
   return items.sort((a, b) => {
@@ -374,10 +376,15 @@ export async function loadContactMessages(): Promise<{ id: string; name: string;
 export async function loadInquiries(): Promise<{ id: string; parentName: string; email: string; phone: string; studentName: string; currentGrade: string; entryGrade: string; entryYear: string; interests: string[]; howHeard: string; message: string; createdAt: Timestamp | null; read?: boolean; deleted?: boolean }[]> {
   const db = getDb();
   if (!db) return [];
-  const q = query(collection(db, "inquiries"), where("deleted", "!=", true));
-  const snap = await getDocs(q);
+  // No server-side deleted filter: `!=` queries silently drop documents where
+  // the field is missing (older + hand-created docs), so filter client-side.
+  const snap = await getDocs(collection(db, "inquiries"));
   const items: any[] = [];
-  snap.forEach((d) => items.push({ id: d.id, ...(d.data() as any) }));
+  snap.forEach((d) => {
+    const data = d.data() as any;
+    if (data.deleted === true) return;
+    items.push({ id: d.id, ...data });
+  });
   return items.sort((a, b) => {
     const aT = a.createdAt?.toMillis?.() ?? 0;
     const bT = b.createdAt?.toMillis?.() ?? 0;
