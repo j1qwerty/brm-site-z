@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Trash, PencilSimple, X, FloppyDisk } from "@phosphor-icons/react/dist/ssr";
 import { AdminHeader, AdminCard, AdminEmptyState, AdminButton, AdminInput, AdminTextarea, AdminField } from "../admin-ui";
-import { HistoryPanel } from "../history-panel";
-import { addItem, updateItem, softDeleteItem, isFirebaseConfigured } from "@/lib/cms";
+import { HistoryPanel, snapshotOf, readHistoryHandoff } from "../history-panel";
+import { addItem, updateItem, softDeleteItem, restoreItem, isFirebaseConfigured } from "@/lib/cms";
 import { useCMS } from "@/lib/cms-context";
 import type { FAQItem } from "@/lib/cms-types";
+import type { CMSHistoryEntry } from "@/lib/cms-types";
 
 const PAGES = ["home", "about", "academics", "admissions", "events", "gallery", "contact", "inquiry"];
 
@@ -28,6 +29,36 @@ export function AdminFAQs() {
   const startAdd = () => { setForm(EMPTY); setEditing(null); setAdding(true); };
   const startEdit = (f: FAQItem) => { setForm({ ...f }); setEditing(f); setAdding(false); };
   const cancel = () => { setEditing(null); setAdding(false); setErr(null); };
+  // Cross-page jump from global History: open the item for editing.
+  useEffect(() => {
+    const handoff = readHistoryHandoff();
+    if (handoff?.docId) {
+      const it = faqs.find((f) => f.id === handoff.docId);
+      if (it) startEdit(it);
+    }
+  }, [faqs]);
+  // Load a history snapshot into the editor: undelete (or recreate) for
+  // delete entries, otherwise prefill the edit/add form for review + save.
+  const handleRestoreEntry = async (entry: CMSHistoryEntry) => {
+    const snap = snapshotOf(entry);
+    if (!snap) return;
+    if (entry.action === "delete") {
+      try {
+        await restoreItem(entry.docId);
+        return;
+      } catch {
+        /* item is gone for good - fall through and recreate it below */
+      }
+    }
+    const existing = faqs.find((f) => f.id === entry.docId);
+    if (existing) {
+      startEdit({ ...existing, ...snap.data } as FAQItem);
+    } else {
+      setForm({ ...EMPTY, ...snap.data } as Omit<FAQItem, "id" | "deleted">);
+      setEditing(null);
+      setAdding(true);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true); setErr(null);
@@ -128,7 +159,7 @@ export function AdminFAQs() {
           ))}
         </div>
       )}
-      <HistoryPanel collection="cms_items" kind="faq" title="FAQ changes" />
+      <HistoryPanel collection="cms_items" kind="faq" title="FAQ changes" onRestore={handleRestoreEntry} />
     </div>
   );
 }

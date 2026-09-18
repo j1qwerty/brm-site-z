@@ -4,8 +4,56 @@ import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { getDb, isFirebaseConfigured } from "@/lib/firebase";
 import type { CMSHistoryEntry } from "@/lib/cms-types";
-import { AdminBadge } from "./admin-ui";
+import { AdminBadge, AdminButton } from "./admin-ui";
 import { historyPageOf } from "./pages/history";
+
+/*
+  snapshotOf: extract the restorable field-map from a history entry.
+  - content/settings entries: after/before ARE the field map.
+  - item add entries: after = { kind, data } -> data.
+  - item edit entries: after = merged data map.
+  - item delete entries: after is { deleted: true } (useless) -> use before
+    (full doc { kind, data, ... } -> data).
+  - restore entries: nothing to fill -> null (no button rendered).
+*/
+export function snapshotOf(
+  entry: CMSHistoryEntry,
+): { kind?: string; data: Record<string, unknown> } | null {
+  if (entry.action === "restore") return null;
+  const pick = (v: unknown): { kind?: string; data: Record<string, unknown> } | null => {
+    if (!v || typeof v !== "object") return null;
+    const o = v as Record<string, unknown>;
+    if (o.data && typeof o.data === "object" && !Array.isArray(o.data)) {
+      return {
+        kind: typeof o.kind === "string" ? o.kind : undefined,
+        data: o.data as Record<string, unknown>,
+      };
+    }
+    if (o.deleted === true && Object.keys(o).length <= 2) return null;
+    return { kind: undefined, data: o };
+  };
+  if (entry.action === "delete") return pick(entry.before);
+  return pick(entry.after) ?? pick(entry.before);
+}
+
+/* Cross-page handoff: global History "Open" writes the target, the destination
+   admin page consumes it on mount (section select / item edit). Tab-scoped. */
+const HANDOFF_KEY = "brm-history-handoff";
+export type HistoryHandoff = { sectionId?: string; docId?: string };
+export function writeHistoryHandoff(h: HistoryHandoff): void {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.setItem(HANDOFF_KEY, JSON.stringify(h));
+}
+export function readHistoryHandoff(): HistoryHandoff | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(HANDOFF_KEY);
+    window.sessionStorage.removeItem(HANDOFF_KEY);
+    return raw ? (JSON.parse(raw) as HistoryHandoff) : null;
+  } catch {
+    return null;
+  }
+}
 
 /*
   HistoryPanel: per-page recent-changes feed.
@@ -22,11 +70,13 @@ export function HistoryPanel({
   docId,
   kind,
   title = "Recent changes",
+  onRestore,
 }: {
   collection: string;
   docId?: string;
   kind?: string;
   title?: string;
+  onRestore?: (entry: CMSHistoryEntry) => void;
 }) {
   const [items, setItems] = useState<CMSHistoryEntry[] | null>(() =>
     isFirebaseConfigured() ? null : [],
@@ -72,8 +122,20 @@ export function HistoryPanel({
             <span className="text-xs font-mono text-muted-foreground">{historyPageOf(h)}</span>
             {h.summary && <span className="text-foreground">{h.summary}</span>}
             {h.timestamp && (
-              <span className="ml-auto text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {new Date(h.timestamp.toMillis?.() ?? 0).toLocaleString()}
+              </span>
+            )}
+            {onRestore && snapshotOf(h) && (
+              <span className="ml-auto" title="Load this version into the editor above">
+                <AdminButton variant="ghost" size="sm" onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                  onRestore(h);
+                }}>
+                  Restore
+                </AdminButton>
               </span>
             )}
           </li>

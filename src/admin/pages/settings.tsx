@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { FloppyDisk } from "@phosphor-icons/react/dist/ssr";
 import { AdminHeader, AdminCard, AdminButton, AdminInput, AdminField } from "../admin-ui";
-import { HistoryPanel } from "../history-panel";
+import { HistoryPanel, snapshotOf } from "../history-panel";
 import { saveSettings, isFirebaseConfigured } from "@/lib/cms";
 import { useCMS } from "@/lib/cms-context";
 import type { CMSSettings } from "@/lib/cms-types";
+import type { CMSHistoryEntry } from "@/lib/cms-types";
 
 const DEFAULTS: CMSSettings = {
   autoDeleteDays: 30,
@@ -42,6 +43,14 @@ export function AdminSettings() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Load a history snapshot into the form for review + save.
+  const handleRestoreEntry = (entry: CMSHistoryEntry) => {
+    const snap = snapshotOf(entry);
+    if (!snap) return;
+    setForm({ ...DEFAULTS, ...snap.data } as CMSSettings);
+    setSaved(false);
   };
 
   return (
@@ -118,7 +127,7 @@ export function AdminSettings() {
           {saved && <span className="text-sm text-green-700 dark:text-green-400">Settings saved.</span>}
         </div>
       </div>
-      <HistoryPanel collection="cms_settings" docId="site" title="Settings changes" />
+      <HistoryPanel collection="cms_settings" docId="site" title="Settings changes" onRestore={handleRestoreEntry} />
     </div>
   );
 }

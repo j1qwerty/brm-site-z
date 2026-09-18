@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash, PencilSimple, X, FloppyDisk } from "@phosphor-icons/react/dist/ssr";
 import { AdminHeader, AdminCard, AdminLoading, AdminEmptyState, AdminButton, AdminInput, AdminTextarea, AdminLabel, AdminField, AdminBadge } from "../admin-ui";
-import { HistoryPanel } from "../history-panel";
-import { addItem, updateItem, softDeleteItem, isFirebaseConfigured } from "@/lib/cms";
+import { HistoryPanel, snapshotOf, readHistoryHandoff } from "../history-panel";
+import { addItem, updateItem, softDeleteItem, restoreItem, isFirebaseConfigured } from "@/lib/cms";
 import { useCMS } from "@/lib/cms-context";
 import type { EventItem } from "@/lib/cms-types";
+import type { CMSHistoryEntry } from "@/lib/cms-types";
 
 const CATEGORIES = ["Academic", "Athletics", "Cultural", "Community", "Open house", "Performance"];
 
@@ -42,6 +43,36 @@ export function AdminEvents() {
     setEditing(null);
     setAdding(false);
     setErr(null);
+  };
+  // Cross-page jump from global History: open the item for editing.
+  useEffect(() => {
+    const handoff = readHistoryHandoff();
+    if (handoff?.docId) {
+      const it = events.find((e) => e.id === handoff.docId);
+      if (it) startEdit(it);
+    }
+  }, [events]);
+  // Load a history snapshot into the editor: undelete (or recreate) for
+  // delete entries, otherwise prefill the edit/add form for review + save.
+  const handleRestoreEntry = async (entry: CMSHistoryEntry) => {
+    const snap = snapshotOf(entry);
+    if (!snap) return;
+    if (entry.action === "delete") {
+      try {
+        await restoreItem(entry.docId);
+        return;
+      } catch {
+        /* item is gone for good - fall through and recreate it below */
+      }
+    }
+    const existing = events.find((e) => e.id === entry.docId);
+    if (existing) {
+      startEdit({ ...existing, ...snap.data } as EventItem);
+    } else {
+      setForm({ ...EMPTY, ...snap.data } as Omit<EventItem, "id" | "deleted">);
+      setEditing(null);
+      setAdding(true);
+    }
   };
   const handleSave = async () => {
     setSaving(true);
@@ -155,7 +186,7 @@ export function AdminEvents() {
           ))}
         </ul>
       )}
-      <HistoryPanel collection="cms_items" kind="event" title="Event changes" />
+      <HistoryPanel collection="cms_items" kind="event" title="Event changes" onRestore={handleRestoreEntry} />
     </div>
   );
 }

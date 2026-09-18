@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Trash, PencilSimple, X, FloppyDisk, PlayCircle } from "@phosphor-icons/react/dist/ssr";
 import { AdminHeader, AdminCard, AdminEmptyState, AdminButton, AdminInput, AdminTextarea, AdminField } from "../admin-ui";
-import { HistoryPanel } from "../history-panel";
-import { addItem, updateItem, softDeleteItem, isFirebaseConfigured } from "@/lib/cms";
+import { HistoryPanel, snapshotOf, readHistoryHandoff } from "../history-panel";
+import { addItem, updateItem, softDeleteItem, restoreItem, isFirebaseConfigured } from "@/lib/cms";
 import { useCMS } from "@/lib/cms-context";
 import type { VideoItem } from "@/lib/cms-types";
+import type { CMSHistoryEntry } from "@/lib/cms-types";
 
 const EMPTY: Omit<VideoItem, "id" | "deleted"> = {
   externalUrl: "",
@@ -30,6 +31,36 @@ export function AdminVideos() {
   const startAdd = () => { setForm(EMPTY); setEditing(null); setAdding(true); };
   const startEdit = (v: VideoItem) => { setForm({ ...v }); setEditing(v); setAdding(false); };
   const cancel = () => { setEditing(null); setAdding(false); setErr(null); };
+  // Cross-page jump from global History: open the item for editing.
+  useEffect(() => {
+    const handoff = readHistoryHandoff();
+    if (handoff?.docId) {
+      const it = videos.find((v) => v.id === handoff.docId);
+      if (it) startEdit(it);
+    }
+  }, [videos]);
+  // Load a history snapshot into the editor: undelete (or recreate) for
+  // delete entries, otherwise prefill the edit/add form for review + save.
+  const handleRestoreEntry = async (entry: CMSHistoryEntry) => {
+    const snap = snapshotOf(entry);
+    if (!snap) return;
+    if (entry.action === "delete") {
+      try {
+        await restoreItem(entry.docId);
+        return;
+      } catch {
+        /* item is gone for good - fall through and recreate it below */
+      }
+    }
+    const existing = videos.find((v) => v.id === entry.docId);
+    if (existing) {
+      startEdit({ ...existing, ...snap.data } as VideoItem);
+    } else {
+      setForm({ ...EMPTY, ...snap.data } as Omit<VideoItem, "id" | "deleted">);
+      setEditing(null);
+      setAdding(true);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true); setErr(null);
@@ -141,7 +172,7 @@ export function AdminVideos() {
           ))}
         </div>
       )}
-      <HistoryPanel collection="cms_items" kind="video" title="Video changes" />
+      <HistoryPanel collection="cms_items" kind="video" title="Video changes" onRestore={handleRestoreEntry} />
     </div>
   );
 }

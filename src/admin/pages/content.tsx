@@ -13,10 +13,11 @@ import {
   AdminLabel,
   AdminField,
 } from "../admin-ui";
-import { HistoryPanel } from "../history-panel";
+import { HistoryPanel, snapshotOf, readHistoryHandoff } from "../history-panel";
 import { loadSectionForEditor, saveSectionDraft, publishSection, revertDraft, isFirebaseConfigured } from "@/lib/cms";
 import { SECTIONS, getDefaultsFor } from "@/lib/cms-defaults";
 import type { SectionId } from "@/lib/cms-types";
+import type { CMSHistoryEntry } from "@/lib/cms-types";
 
 /*
   CMS Content Editor
@@ -39,6 +40,16 @@ export function AdminContent() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "saved" | "published" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Cross-page jump from global History: pre-select the section.
+  useEffect(() => {
+    const handoff = readHistoryHandoff();
+    if (handoff?.sectionId) {
+      const group = SECTIONS.find((g) => g.sections.some((s) => s.id === handoff.sectionId));
+      if (group) setActivePage(group.page);
+      setSelected(handoff.sectionId as SectionId);
+    }
+  }, []);
 
   useEffect(() => {
     if (!selected) return;
@@ -124,6 +135,15 @@ export function AdminContent() {
   const handlePageSwitch = (page: string) => {
     setActivePage(page);
     setSelected(null);
+    setStatus("idle");
+    setErrorMsg(null);
+  };
+
+  // Load a history snapshot into the draft fields for review + save/publish.
+  const handleRestoreEntry = (entry: CMSHistoryEntry) => {
+    const snap = snapshotOf(entry);
+    if (!snap) return;
+    setDraftValues({ ...snap.data });
     setStatus("idle");
     setErrorMsg(null);
   };
@@ -262,7 +282,7 @@ export function AdminContent() {
             </AdminCard>
           )}
           {selected && (
-            <HistoryPanel collection="cms_content" docId={selected} title="Section history" />
+            <HistoryPanel collection="cms_content" docId={selected} title="Section history" onRestore={handleRestoreEntry} />
           )}
         </div>
       </div>

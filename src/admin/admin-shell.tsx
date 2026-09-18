@@ -218,7 +218,7 @@ export function AdminShell() {
               {page === "gallery" && <AdminGallery />}
               {page === "videos" && <AdminVideos />}
               {page === "faqs" && <AdminFAQs />}
-              {page === "history" && <AdminHistory />}
+              {page === "history" && <AdminHistory onNavigate={setPage} />}
               {page === "trash" && <AdminTrash />}
               {page === "settings" && <AdminSettings />}
             </motion.div>

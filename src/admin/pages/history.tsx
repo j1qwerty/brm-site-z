@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AdminHeader, AdminLoading, AdminEmptyState, AdminCard, AdminBadge } from "../admin-ui";
+import { AdminHeader, AdminLoading, AdminEmptyState, AdminCard, AdminBadge, AdminButton } from "../admin-ui";
 import { loadHistory, isFirebaseConfigured } from "@/lib/cms";
 import { SECTIONS } from "@/lib/cms-defaults";
 import type { CMSHistoryEntry } from "@/lib/cms-types";
+import type { AdminPage } from "../admin-shell";
+import { writeHistoryHandoff } from "../history-panel";
 
 const SECTION_PAGES = new Map(
   SECTIONS.flatMap((g) => g.sections.map((s) => [s.id, g.page] as const)),
@@ -46,7 +48,7 @@ export function historyPageOf(h: CMSHistoryEntry): string {
   return "Other";
 }
 
-export function AdminHistory() {
+export function AdminHistory({ onNavigate }: { onNavigate: (p: AdminPage) => void }) {
   const [items, setItems] = useState<CMSHistoryEntry[] | null>(() => (isFirebaseConfigured() ? null : []));
   const [filter, setFilter] = useState<string>("all");
   const [pageFilter, setPageFilter] = useState<string>("all");
@@ -157,6 +159,23 @@ export function AdminHistory() {
                         {new Date(h.timestamp.toMillis?.() ?? 0).toLocaleString()}
                       </p>
                     )}
+                    {historyTarget(h) && (
+                      <div className="mt-2">
+                        <AdminButton
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            const t = historyTarget(h);
+                            if (!t) return;
+                            if (t.sectionId) writeHistoryHandoff({ sectionId: t.sectionId });
+                            else if (t.docId) writeHistoryHandoff({ docId: t.docId });
+                            onNavigate(t.page);
+                          }}
+                        >
+                          Open
+                        </AdminButton>
+                      </div>
+                    )}
                   </div>
                 </div>
               </li>
@@ -168,8 +187,30 @@ export function AdminHistory() {
   );
 }
 
-function actionColor(action: string): "neutral" | "amber" | "danger" | "success" {
-  switch (action) {
+/* Destination admin page for an "Open" jump from global history. */
+export function historyTarget(h: CMSHistoryEntry): { page: AdminPage; sectionId?: string; docId?: string } | null {
+  if (h.sectionId) return { page: "content", sectionId: h.sectionId };
+  if (h.collection === "cms_items") {
+    const kind =
+      h.kind ??
+      (h.after as { kind?: unknown } | null)?.kind ??
+      (h.before as { kind?: unknown } | null)?.kind;
+    const page =
+      kind === "gallery" ? "gallery"
+      : kind === "video" ? "videos"
+      : kind === "event" ? "events"
+      : kind === "faq" ? "faqs"
+      : null;
+    if (page) return { page, docId: h.docId };
+    return null;
+  }
+  if (h.collection === "cms_settings") return { page: "settings" };
+  if (h.collection === "inquiries") return { page: "inquiries" };
+  if (h.collection === "contact_messages") return { page: "contacts" };
+  return null;
+}
+
+function actionColor(action: string): "neutral" | "amber" | "danger" | "success" {  switch (action) {
     case "add":
     case "restore":
       return "success";
