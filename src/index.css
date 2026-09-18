@@ -1,0 +1,225 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  LUMINA ACADEMY DESIGN TOKENS
+  Forest palette: deep green + bone + warm amber accent.
+  Per taste-skill §4.2 "Forest" preset, avoiding the banned beige+brass+espresso
+  AI-default family. One accent (amber), one neutral (bone), one deep (forest).
+*/
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display-stack);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-amber: var(--amber-accent);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  /* Forest palette - light mode */
+  --radius: 0.625rem;
+  --background: oklch(0.985 0.012 100);        /* bone white, slightly warm */
+  --foreground: oklch(0.22 0.02 160);          /* deep forest near-black with green tint */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 160);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.02 160);
+  --primary: oklch(0.32 0.04 160);            /* forest green */
+  --primary-foreground: oklch(0.985 0.012 100);
+  --secondary: oklch(0.94 0.012 100);
+  --secondary-foreground: oklch(0.32 0.04 160);
+  --muted: oklch(0.94 0.012 100);
+  --muted-foreground: oklch(0.42 0.015 160);
+  --accent: oklch(0.76 0.13 75);               /* amber accent - the single accent */
+  --accent-foreground: oklch(0.22 0.04 75);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.86 0.012 100);
+  --input: oklch(0.92 0.012 100);
+  --ring: oklch(0.76 0.13 75);
+  --brand: oklch(0.32 0.04 160);
+  --brand-foreground: oklch(0.985 0.012 100);
+  --amber-accent: oklch(0.76 0.13 75);
+  --chart-1: oklch(0.32 0.04 160);
+  --chart-2: oklch(0.76 0.13 75);
+  --chart-3: oklch(0.55 0.05 160);
+  --chart-4: oklch(0.68 0.09 75);
+  --chart-5: oklch(0.42 0.02 160);
+  --sidebar: oklch(0.985 0.012 100);
+  --sidebar-foreground: oklch(0.22 0.02 160);
+  --sidebar-primary: oklch(0.32 0.04 160);
+  --sidebar-primary-foreground: oklch(0.985 0.012 100);
+  --sidebar-accent: oklch(0.94 0.012 100);
+  --sidebar-accent-foreground: oklch(0.22 0.02 160);
+  --sidebar-border: oklch(0.86 0.012 100);
+  --sidebar-ring: oklch(0.76 0.13 75);
+
+  --font-display-stack: "Geist", ui-sans-serif, system-ui, sans-serif;
+
+  /* Font variables were previously injected by next/font at runtime.
+     In the Vite build they resolve to the Google Fonts <link> in index.html,
+     with system fallbacks when the webfont is unavailable. */
+  --font-geist-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+.dark {
+  --background: oklch(0.18 0.012 160);         /* deep forest near-black */
+  --foreground: oklch(0.96 0.012 100);
+  --card: oklch(0.22 0.015 160);
+  --card-foreground: oklch(0.96 0.012 100);
+  --popover: oklch(0.22 0.015 160);
+  --popover-foreground: oklch(0.96 0.012 100);
+  --primary: oklch(0.985 0.012 100);
+  --primary-foreground: oklch(0.18 0.012 160);
+  --secondary: oklch(0.28 0.015 160);
+  --secondary-foreground: oklch(0.96 0.012 100);
+  --muted: oklch(0.28 0.015 160);
+  --muted-foreground: oklch(0.72 0.012 100);
+  --accent: oklch(0.82 0.15 75);
+  --accent-foreground: oklch(0.18 0.012 160);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.82 0.15 75);
+  --brand: oklch(0.985 0.012 100);
+  --brand-foreground: oklch(0.18 0.012 160);
+  --amber-accent: oklch(0.82 0.15 75);
+  --chart-1: oklch(0.985 0.012 100);
+  --chart-2: oklch(0.82 0.15 75);
+  --chart-3: oklch(0.55 0.05 160);
+  --chart-4: oklch(0.68 0.09 75);
+  --chart-5: oklch(0.42 0.02 160);
+  --sidebar: oklch(0.22 0.015 160);
+  --sidebar-foreground: oklch(0.96 0.012 100);
+  --sidebar-primary: oklch(0.985 0.012 100);
+  --sidebar-primary-foreground: oklch(0.18 0.012 160);
+  --sidebar-accent: oklch(0.28 0.015 160);
+  --sidebar-accent-foreground: oklch(0.96 0.012 100);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.82 0.15 75);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv11";
+  }
+  /* Per taste-skill §4.1: prefer sans display. Geist Sans for everything. */
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-display-stack);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  ::selection {
+    background-color: var(--amber-accent);
+    color: var(--background);
+  }
+}
+
+@layer utilities {
+  /* MASONRY: classic CSS columns pattern, widely shared on GitHub.
+     Used by the Gallery view. Prefer this over heavy JS libraries. */
+  .masonry {
+    column-count: 1;
+    column-gap: 1rem;
+  }
+  @media (min-width: 640px) { .masonry { column-count: 2; } }
+  @media (min-width: 1024px) { .masonry { column-count: 3; } }
+  @media (min-width: 1280px) { .masonry { column-count: 4; } }
+  .masonry > * {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  /* Subtle grain overlay - fixed, pointer-events-none (per taste-skill §6.E) */
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .dark .grain { opacity: 0.08; mix-blend-mode: screen; }
+
+  /* Subtle gradient text used for one or two accents */
+  .text-balance { text-wrap: balance; }
+
+  /* For SVG decorative bg - used by AnimatedBackground */
+  .bg-svg-decor {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform, opacity;
+  }
+
+  /* The corner placement anchors for SVG decor */
+  .corner-tl { top: 5%; left: 3%; }
+  .corner-tr { top: 8%; right: 4%; }
+  .corner-bl { bottom: 8%; left: 4%; }
+  .corner-br { bottom: 5%; right: 3%; }
+  .corner-ml { top: 45%; left: 2%; }
+  .corner-mr { top: 42%; right: 2%; }
+  .corner-tm { top: 4%; left: 50%; transform: translateX(-50%); }
+  .corner-bm { bottom: 6%; left: 50%; transform: translateX(-50%); }
+  .corner-center { top: 40%; left: 45%; }
+}
+
+/* Per taste-skill §6.B: honor prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
