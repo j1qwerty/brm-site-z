@@ -1,45 +1,40 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Anyone can write a contact message; no public read.
+    // Anyone can submit a contact message; only signed-in admins can read/update.
     match /contact_messages/{docId} {
       allow create: if true;
-      allow read, update, delete: if false;
+      allow read, update, delete: if request.auth != null;
     }
 
-    // Anyone can write an inquiry; no public read.
+    // Anyone can submit an inquiry; only signed-in admins can read/update.
     match /inquiries/{docId} {
       allow create: if true;
-      allow read, update, delete: if false;
+      allow read, update, delete: if request.auth != null;
     }
 
     // Public can READ cms_content (live overrides only).
-    // Writes are restricted to authenticated admins.
-    // NOTE: Until you wire Firebase Auth, this allows writes from anyone
-    // who knows the sectionId. Tighten with `request.auth != null` once
-    // auth is set up.
+    // Writes are restricted to signed-in admins (Google sign-in).
     match /cms_content/{docId} {
       allow read: if true;
-      allow write: if true;  // TODO: tighten to `request.auth != null`
+      allow write: if request.auth != null;
     }
 
-    // Public can READ non-deleted cms_items.
-    // Admin writes are open until auth is configured.
+    // Public can READ cms_items. Writes are restricted to signed-in admins.
     match /cms_items/{docId} {
       allow read: if true;
-      allow write: if true;  // TODO: tighten to `request.auth != null`
+      allow write: if request.auth != null;
     }
 
-    // Public can READ cms_settings.
+    // Public can READ cms_settings. Writes are restricted to signed-in admins.
     match /cms_settings/{docId} {
       allow read: if true;
-      allow write: if true;  // TODO: tighten to `request.auth != null`
+      allow write: if request.auth != null;
     }
 
     // History is admin-only.
     match /cms_history/{docId} {
-      allow read: if true;   // TODO: tighten to `request.auth != null`
-      allow write: if true;  // TODO: tighten to `request.auth != null`
+      allow read, write: if request.auth != null;
     }
 
     // Deny everything else.
